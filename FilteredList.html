@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <!-- <link rel="stylesheet" type="text/css" href="main.css"> -->
+	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular.min.js"></script>
+	<style type="text/css">
+	body{background-color: #f7f7f7;}
+	body>div{background-color: #fff; padding: 15px 0 15px 0;}
+	/*.nav-wrapper{margin: 25px 0 50px 0;}*/
+	.success-message{
+		background-color: lightgreen;
+		font-weight: bold;
+	}
+	.zip-buttons>button{
+		margin: 0 10px;
+	}
+	button.form-cluster{
+		background-color: lightgreen;
+		border: 1px solid green;
+		border-radius: 5px;
+		padding: 6px;
+		font-weight: bold;
+	}
+	</style>
+	</head>
+    <body>
+      <div ng-app="myApp" ng-controller="myCtrl" class="container shadow-sm mb-5 light rounded"> <!--OVERALL CONTAINING DIV FOR STYLISTIC PURPOSES-->
+        <div class="container p-0"> <!--CONTAINER DIV FOR HEADER AND NAV BAR-->
+          <div class="row">
+            <!-- <div class="container d-flex justify-content-center">
+                <img style="width: 225px; height: 225px;" src="http://alexdomzalski.com/botglogo.png">
+            </div> -->
+          </div>
+        </div>
+          <div class="row">
+            <div class="container d-flex justify-content-center">
+                <h1>People by Postal Code</h1>
+            </div>
+          </div>
+          <div class="row nav-wrapper">
+              <nav class="navbar navbar-light bg-light col-lg-12 justify-content-center">
+                <ul class="nav nav-tabs">
+                  <li class="nav-item">
+                    <a class="nav-link" href="index.html">Home</a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link" href="signup.html">Sign-Up</a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link" href="#!">Members</a>
+                  </li>
+                </ul>
+              </nav>
+          </div>
+		  <div class="container">
+			<h4>Zip Code Lookup</h4>
+			<span class="zip-buttons">
+				<button ng-repeat="(key,val) in zipSummary" ng-click="setZip(key)">{{key}} - {{val.needers}} : {{val.careTakers}}</button>
+				<!-- <button ng-click="fetchDistinctZips()">&gt;</button> -->
+				<button ng-click="setZip()" title="Clear filter">X</button>
+				Zip code: <input ng-model="zip" /> <button name="search" ng-click="fetchUserList()">Search</button>
+			</span>
+			<br />
+			<br />
+			<center>
+				<button class="form-cluster" ng-click="formCluster()">Form Cluster</button>
+			</center>
+		  </div>
+		  <br />
+          <div class="container"> <!--CONTAINER DIV FOR MAIN FILTERLIST CONTENT-->
+            <div class="row pl-4 pr-4">
+			  <div class="success-message" ng-bind="successMessage"></div>
+              <div class="col-md">
+			  <h4>Needers</h4>
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th></th>
+                    <th>Zip Code</th>
+                    <th>User</th>
+                    <th>Needs</th>
+                    <th>Delete</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr ng-repeat="d in needers | filter:f" data-uid="{{d._id}}">
+                    <td><input type="radio" name="select_needer" ng-click="selectUser(this)"></td>
+                    <td>{{d.ZipCode}}</td>
+                    <td><a href="mailto:{{d.email}}">{{d.name}}</a></td>
+                    <td>{{d.Description}}</td>
+					<!-- Add Custom1 (tags) -->
+                    <td><button name="remove_user" ng-click="removeUser(d._id, 'needers')">Delete</button></td>
+                  </tr>
+                </tbody>
+              </table>
+			  </div>
+              <div class="col-md">
+              <h4>Care Takers</h4>
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th></th>
+                    <th>Zip Code</th>
+                    <th>User</th>
+                    <th>Provides</th>
+                    <th>Delete</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr ng-repeat="d in careTakers | filter:f" data-uid="{{d._id}}">
+                    <td><input type="checkbox" name="select_care_taker" /></td>
+                    <td>{{d.ZipCode}}</td>
+                    <td><a href="mailto:{{d.email}}">{{d.name}}</a></td>
+                    <td>{{d.Description}}</td>
+					<!-- Add Custom1 (tags) -->
+                    <td><button name="remove_user" ng-click="removeUser(d._id, 'careTakers')">Delete</button></td>
+                  </tr>
+                </tbody>
+              </table>
+              </div>
+              </div>
+            </div>
+          </div>
+		<div class="container pt-4 pb-2"> <!--CONTAINER DIV FOR FOOTER AND ADDITIONAL INFO-->
+		  <div class="row">
+			<div class="container d-flex justify-content-center">
+			  <footer>
+				<p>
+				  CoronavirusArmy | <a href="https://www.coronavirusarmy.org">coronavirusarmy.org</a> | 2020
+				</p>
+			  </footer>
+			</div>
+		  </div>
+		</div>
+		<script>
+		// var data = [{"_id":"5e779f0b6cbfc12a075f143b","email":"howard@notreal.com","name":"Howard Humphries","ZipCode":"94703","Description":"Deliveries needed","__v":0},{"_id":"5e779f0b6cbfc12a075f143d","email":"betty@notreal.com","name":"Betty Crocker","ZipCode":"10034","Description":"Deliveries needed","__v":0},{"_id":"5e779f0b6cbfc12a075f143e","email":"casey@notreal.com","name":"Casey Casum","ZipCode":"94703","Description":"Babysitting","__v":0}]
+		/*
+		TO DO:
+		make a cluster
+		DONE: add remove button
+		add checkboxes - make cluster
+		API calls - Mission Doc
+		https://florianholzapfel.github.io/express-restify-mongoose/#querying
+		https://docs.google.com/document/d/11nk1qhYlqJ02ErjxzccTOxqJ-ykpaJMepMwqdjNPCMg/edit#
+		Website tasks: https://docs.google.com/document/d/1Fh9sUDvFkahB1yFyaTG5cjDw08uPZshxmtrLsDM3p68/edit
+		Work towards full Tinder mode
+			And I'm Desperate mode
+		
+		Data:
+		custom1 - hash tag field ex: lgbt, catholic - search by
+		Global count at the top
+		mlab
+		Add matched clusters table
+
+		End User interface:
+		no checkboxes or deletes
+		Only show first letter of name
+		zip code lookup
+		*/
+		// Filter by zip: http://ab86fd25.ngrok.io/api/v1/NeedersLookingForMatch?query=%7B%22ZipCode%22:%2294703%22%7D
+		var app = angular.module('myApp', []);
+		app.controller('myCtrl', function($scope, $http) {
+			$scope.apiHost = 'http://c29a9953.ngrok.io/api/v1/';
+			$scope.neederTable = 'NeedersLookingForMatch';
+			$scope.careTakerTable = 'CaretakersLookingForMatch';
+			$scope.successMessage = '';
+			$scope.zipListMax = 10;
+			$scope.zipListSkip = 0;
+			$scope.userReturnCount = 0;
+			
+			$scope.zip;
+			//$scope.zipList = [];
+			$scope.zipSummary = {};
+			$scope.zipButtons = '';
+			$scope.needers = [];
+			$scope.careTakers = [];
+			$scope.f;
+			
+			/*
+			// DO NOT DELETE YET
+			// Maybe resurrect this when there's an endpoint for zipcode counts
+			$scope.fetchDistinctZips = function(){
+				//http://ab86fd25.ngrok.io/api/v1/NeedersLookingForMatch?distinct=ZipCode&limit=10
+				q = '?distinct=ZipCode&limit=' + $scope.zipListMax + '&skip=' + $scope.zipListSkip;
+				$http.get($scope.apiHost + $scope.neederTable + q)
+				.then(function(response) {
+					$scope.zipList = response.data;
+					$scope.zipListSkip += $scope.zipListMax; // Increment skip by limit
+				}, function (response){
+					$scope.handleApiError(response)
+				});
+			}
+			*/
+			//$scope.fetchDistinctZips();
+			$scope.setZip = function(zip){
+				$scope.f = zip;
+				//$scope.zip = zip;
+				//$scope.fetchUserList();
+			}
+			$scope.fetchUserList = function(){
+				var q = '';
+				if($scope.zip)
+					q = '?query=%7B%22ZipCode%22:%22'+$scope.zip+'%22%7D';
+				// Fetch needers
+				$http.get($scope.apiHost + $scope.neederTable + q)
+				.then(function(response) {
+					//console.log(response.data);
+					$scope.needers = response.data;
+					$scope.afterUserListFetches();
+				}, function (response){
+					$scope.handleApiError(response);
+					$scope.afterUserListFetches();
+				});
+				// Fetch careTakers
+				$http.get($scope.apiHost + $scope.careTakerTable + q)
+				.then(function(response) {
+					$scope.careTakers = response.data;
+					$scope.afterUserListFetches();
+				}, function (response){
+					$scope.handleApiError(response);
+					$scope.afterUserListFetches();
+				});
+				
+			}
+			$scope.fetchUserList();
+			$scope.afterUserListFetches = function(){
+				$scope.userReturnCount++;
+				if($scope.userReturnCount == 2){
+					// Get zips & counts from needers & careTakers
+					var tmp;
+					for(var i = 0; i < $scope.needers.length; i++){
+						//console.log('here0: ');
+						tmp = $scope.needers[i].ZipCode;
+						if(typeof $scope.zipSummary[tmp] == "undefined"){
+							$scope.zipSummary[tmp] = {needers : 1, careTakers : 0};
+							//console.log('here1: ' + tmp);
+						}
+						else{
+							$scope.zipSummary[tmp].needers++;
+							//console.log('here2: ' + tmp);
+						}
+					}
+					for(var i = 0; i < $scope.careTakers.length; i++){
+						//console.log('here0: ');
+						tmp = $scope.careTakers[i].ZipCode;
+						if(typeof $scope.zipSummary[tmp] == "undefined"){
+							$scope.zipSummary[tmp] = {needers : 0, careTakers : 1};
+							//console.log('here1: ' + tmp);
+						}
+						else{
+							$scope.zipSummary[tmp].careTakers++;
+							//console.log('here2: ' + tmp);
+						}
+					}
+					$scope.userReturnCount = 0;
+				}
+			}
+			$scope.selectUser = function(obj){
+				//console.log(obj);
+				//angular.element(item).data('id');
+				zip = obj.d.ZipCode;
+				$scope.setZip(zip);
+				/*if(obj.attributes['name'] == 'select_needer'){
+					zip = obj.attributes['data-zip'];
+					$scope.setZip(zip);
+				}*/
+			}
+			$scope.removeUser = function(user_uid, type){
+				//alert(user_uid);
+				// Call service to remove user
+				if(type == "needers"){
+					$http.delete($scope.apiHost + $scope.neederTable + '/' + user_uid)
+					.then(function(response){
+						//console.log(response);
+						// Remove user from page
+						for(var i = 0; i < $scope.needers.length; i++)
+							if($scope.needers[i]._id == user_uid){
+								$scope.needers.splice(i, 1);
+								break;
+							}
+						$scope.displaySuccess('Successfully removed user');
+					}, function (response){
+						$scope.handleApiError(response)
+					});
+				}
+				else if(type == "careTakers"){
+					$http.delete($scope.apiHost + $scope.careTakerTable + '/' + user_uid)
+					.then(function(response){
+						//console.log(response);
+						// Remove user from page
+						for(var i = 0; i < $scope.careTakers.length; i++)
+							if($scope.careTakers[i]._id == user_uid){
+								$scope.careTakers.splice(i, 1);
+								break;
+							}
+						$scope.displaySuccess('Successfully removed user');
+					}, function (response){
+						$scope.handleApiError(response)
+					});
+				}
+				else
+					console.log("type not found");
+				// Log the action
+				
+			}
+			$scope.formCluster = function(){
+				
+			}
+			$scope.displayFailure = function(message){
+				alert(message);
+			}
+			$scope.displaySuccess = function(message){
+				$scope.successMessage = message;
+				setTimeout( () => {
+				  successMessage = '';
+				}, 2000);
+				
+			}
+			$scope.handleApiError = function(response){
+				console.log(response);
+				$scope.displayFailure(response.statusText || "There was an error with your request");
+			}
+		});
+		
+		</script>
+    </body>
+</html>
+<!--THIS IS A SIMPLE FILTER LIST (WILL CONNECT TO DATABASE OF MEMBERS) AND HOW IT IS DISPLAYED.
+NO NAV/LINK FUNCTIONALITY AT THE MOMENT-->
