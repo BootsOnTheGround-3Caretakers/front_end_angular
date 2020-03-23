@@ -11,5 +11,6 @@ reminder @xander please copy it here (if not copied by 3/23, 10PM Eastern Time, 
 
 Short version.
 
-User makes account. Gets matched to a cluster. Then disbands the cluster. And makes another cluster.
+User makes account. Gets matched to a cluster. Then disbands the cluster. And makes another cluster. Showing off that they nearly instantaneously (with a refresh) update on the screen.
 
+Note: BabyAPI is not firebase, so it won't do instant sync across devices.
