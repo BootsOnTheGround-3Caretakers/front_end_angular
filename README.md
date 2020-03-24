@@ -14,3 +14,20 @@ Short version.
 User makes account. Gets matched to a cluster. Then disbands the cluster. And makes another cluster. Showing off that they nearly instantaneously (with a refresh) update on the screen.
 
 Note: BabyAPI is not firebase, so it won't do instant sync across devices.
+
+### Requirements
+TO DO:
+* Make a cluster
+  * Use checboxes
+  * Add clusters to matched clusters table
+* Global count at the top - Needs review
+* Work towards full Tinder mode
+  * And I'm Desperate mode
+
+End User interface:
+* no checkboxes or deletes
+* Only show first letter of name
+* zip code lookup
+
+DONE:
+* add "remove" buttons
