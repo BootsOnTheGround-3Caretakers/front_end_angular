@@ -72,7 +72,7 @@
             <div class="row pl-4 pr-4">
 			  <div class="success-message" ng-bind="successMessage"></div>
               <div class="col-md">
-			  <h4>Needers</h4>
+			  <h4>Needers {{filteredNeeders.length}}</h4>
               <table class="table table-hover">
                 <thead>
                   <tr>
@@ -84,8 +84,8 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr ng-repeat="d in needers | filter:f" data-uid="{{d._id}}">
-                    <td><input type="radio" name="select_needer" ng-click="selectUser(this)"></td>
+                  <tr ng-repeat="d in needers | filter:f as filteredNeeders" data-uid="{{d._id}}">
+                    <td><input type="radio" name="select_needer" ng-click="selectUser(this)" ng-model="selectedNeeder" ng-value="d._id" /></td>
                     <td>{{d.ZipCode}}</td>
                     <td><a href="mailto:{{d.email}}">{{d.name}}</a></td>
                     <td>{{d.Description}}</td>
@@ -96,7 +96,7 @@
               </table>
 			  </div>
               <div class="col-md">
-              <h4>Care Takers</h4>
+              <h4>Care Takers {{filteredCareTakers.length}}</h4>
               <table class="table table-hover">
                 <thead>
                   <tr>
@@ -108,8 +108,8 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr ng-repeat="d in careTakers | filter:f" data-uid="{{d._id}}">
-                    <td><input type="checkbox" name="select_care_taker" /></td>
+                  <tr ng-repeat="d in careTakers | filter:f as filteredCareTakers" data-uid="{{d._id}}">
+                    <td><input type="checkbox" name="select_care_taker" checklist-model="selectedCareTakers" checklist-value="d._id" /></td>
                     <td>{{d.ZipCode}}</td>
                     <td><a href="mailto:{{d.email}}">{{d.name}}</a></td>
                     <td>{{d.Description}}</td>
@@ -135,40 +135,21 @@
 		</div>
 		<script>
 		// var data = [{"_id":"5e779f0b6cbfc12a075f143b","email":"howard@notreal.com","name":"Howard Humphries","ZipCode":"94703","Description":"Deliveries needed","__v":0},{"_id":"5e779f0b6cbfc12a075f143d","email":"betty@notreal.com","name":"Betty Crocker","ZipCode":"10034","Description":"Deliveries needed","__v":0},{"_id":"5e779f0b6cbfc12a075f143e","email":"casey@notreal.com","name":"Casey Casum","ZipCode":"94703","Description":"Babysitting","__v":0}]
-		/*
-		TO DO:
-		make a cluster
-		DONE: add remove button
-		add checkboxes - make cluster
-		API calls - Mission Doc
-		https://florianholzapfel.github.io/express-restify-mongoose/#querying
-		https://docs.google.com/document/d/11nk1qhYlqJ02ErjxzccTOxqJ-ykpaJMepMwqdjNPCMg/edit#
-		Website tasks: https://docs.google.com/document/d/1Fh9sUDvFkahB1yFyaTG5cjDw08uPZshxmtrLsDM3p68/edit
-		Work towards full Tinder mode
-			And I'm Desperate mode
 		
-		Data:
-		custom1 - hash tag field ex: lgbt, catholic - search by
-		Global count at the top
-		mlab
-		Add matched clusters table
-
-		End User interface:
-		no checkboxes or deletes
-		Only show first letter of name
-		zip code lookup
-		*/
-		// Filter by zip: http://ab86fd25.ngrok.io/api/v1/NeedersLookingForMatch?query=%7B%22ZipCode%22:%2294703%22%7D
+		// Filter by zip: http://c29a9953.ngrok.io/api/v1/NeedersLookingForMatch?query=%7B%22ZipCode%22:%2294703%22%7D
 		var app = angular.module('myApp', []);
 		app.controller('myCtrl', function($scope, $http) {
 			$scope.apiHost = 'http://c29a9953.ngrok.io/api/v1/';
 			$scope.neederTable = 'NeedersLookingForMatch';
 			$scope.careTakerTable = 'CaretakersLookingForMatch';
+			$scope.matchedClustersTable = 'MatchedClusters';
 			$scope.successMessage = '';
 			$scope.zipListMax = 10;
 			$scope.zipListSkip = 0;
 			$scope.userReturnCount = 0;
 			
+			$scope.selectedNeeder;
+			$scope.selectedCareTakers;
 			$scope.zip;
 			//$scope.zipList = [];
 			$scope.zipSummary = {};
@@ -281,7 +262,7 @@
 							}
 						$scope.displaySuccess('Successfully removed user');
 					}, function (response){
-						$scope.handleApiError(response)
+						$scope.handleApiError(response);
 					});
 				}
 				else if(type == "careTakers"){
@@ -296,7 +277,7 @@
 							}
 						$scope.displaySuccess('Successfully removed user');
 					}, function (response){
-						$scope.handleApiError(response)
+						$scope.handleApiError(response);
 					});
 				}
 				else
@@ -305,6 +286,32 @@
 				
 			}
 			$scope.formCluster = function(){
+				// Insert the user details into the matched clusters table
+				console.log($scope.selectedNeeder);
+				console.log($scope.selectedCareTakers);
+				return;
+				
+				// DEBUGGING:
+				var needer = {email : 'asdf1@no.com'}, zip = '12345', careTaker1 = {email : 'asdf2@no.com'}, careTaker2 = {email : 'asdf3@no.com'}, careTaker3 = {email : 'asdf4@no.com'}
+				
+				
+				var extraJson = JSON.stringify([needer, careTaker1, careTaker2, careTaker3]);
+				var data = {
+					NeederEmail : needer.email,
+					ZipCodeCommon : zip,
+					Caretaker1Email : careTaker1.email,
+					Caretaker2Email : careTaker2.email,
+					Caretaker3Email : careTaker3.email,
+					ExtraJSONstrings : extraJson
+				};
+				$http.post($scope.apiHost + $scope.matchedClustersTable, data)
+				.then(function(){
+					console.log("formCluster returned");
+				}, function(response){
+					$scope.handleApiError(response);
+				});
+				
+				// Delete the selected records
 				
 			}
 			$scope.displayFailure = function(message){
