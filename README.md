@@ -3,8 +3,11 @@ The Boots on the Ground project
 
 This repo contains Angular code for the front end of the Boots on the Ground project.
 
+###
+![Screenshot with code on buttons (for debugging)](https://i.imgur.com/rvNIYJr.png)
 
-### Demo Script
+
+### DemoGoals Script
 ####Short version.
 
 * User makes account. Sees a bunch of people with needs and caretaker roles. Gets Excited!
