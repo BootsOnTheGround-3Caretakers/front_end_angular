@@ -8,7 +8,7 @@ This repo contains Angular code for the front end of the Boots on the Ground pro
 
 
 ### DemoGoals Script
-####Short version.
+#### Short version.
 
 * User makes account. Sees a bunch of people with needs and caretaker roles. Gets Excited!
 * They enter in zip and sees local people. Filters by their need (i.e. Custom1 field in babyAPI).
@@ -38,20 +38,3 @@ Great: code it
 Excellent: code it an record a video demo.
 
 Note: BabyAPI is not firebase, so it won't do instant sync across devices.
-
-### Requirements
-TO DO:
-* Make a cluster
-  * Use checboxes
-  * Add clusters to matched clusters table
-* Global count at the top - Needs review
-* Work towards full Tinder mode
-  * And I'm Desperate mode
-
-End User interface:
-* no checkboxes or deletes
-* Only show first letter of name
-* zip code lookup
-
-DONE:
-* add "remove" buttons
