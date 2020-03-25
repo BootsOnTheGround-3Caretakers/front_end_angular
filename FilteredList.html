@@ -72,7 +72,7 @@
             <div class="row pl-4 pr-4">
 			  <div class="success-message" ng-bind="successMessage"></div>
               <div class="col-md">
-			  <h4>Needers {{filteredNeeders.length}}</h4>
+			  <h4>Needers {{filteredNeeders.length}} </h4>
               <table class="table table-hover">
                 <thead>
                   <tr>
@@ -84,8 +84,8 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr ng-repeat="d in needers | filter:f as filteredNeeders" data-uid="{{d._id}}">
-                    <td><input type="radio" name="select_needer" ng-click="selectUser(this)" ng-model="selectedNeeder" ng-value="d._id" /></td>
+                  <tr ng-repeat="d in needers | filter:neederZipFilter as filteredNeeders" data-uid="{{d._id}}">
+                    <td><input type="radio" name="select_needer" ng-click="setNeeder(this)" ng-value="d._id" /></td>
                     <td>{{d.ZipCode}}</td>
                     <td><a href="mailto:{{d.email}}">{{d.name}}</a></td>
                     <td>{{d.Description}}</td>
@@ -108,8 +108,9 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr ng-repeat="d in careTakers | filter:f as filteredCareTakers" data-uid="{{d._id}}">
-                    <td><input type="checkbox" name="select_care_taker" checklist-model="selectedCareTakers" checklist-value="d._id" /></td>
+                  <tr ng-repeat="d in careTakers | filter:careTakerZipFilter as filteredCareTakers" data-uid="{{d._id}}">
+                    <!-- <td><input type="checkbox" name="select_care_taker" ng-click="setCareTaker(this)" checklist-value="d._id" /></td> -->
+                    <td><input type="checkbox" name="select_care_taker" ng-model="d.selected" checklist-value="d._id" /></td>
                     <td>{{d.ZipCode}}</td>
                     <td><a href="mailto:{{d.email}}">{{d.name}}</a></td>
                     <td>{{d.Description}}</td>
@@ -149,7 +150,12 @@
 			$scope.userReturnCount = 0;
 			
 			$scope.selectedNeeder;
+			$scope.selectedNeederIndex;
 			$scope.selectedCareTakers;
+			$scope.selectedCareTakersIndeces;
+			$scope.neederZipFilter;
+			$scope.careTakerZipFilter;
+			
 			$scope.zip;
 			//$scope.zipList = [];
 			$scope.zipSummary = {};
@@ -176,8 +182,19 @@
 			//$scope.fetchDistinctZips();
 			$scope.setZip = function(zip){
 				$scope.f = zip;
+				$scope.careTakerZipFilter = zip;
+				$scope.neederZipFilter = zip;
 				//$scope.zip = zip;
 				//$scope.fetchUserList();
+			}
+			$scope.setCareTakerZipFilter = function(zip){
+				$scope.careTakerZipFilter = zip;
+			}
+			$scope.setNeeder = function(obj){
+				//console.log(obj);
+				$scope.selectedNeederIndex = obj.$index;
+				$scope.selectedNeeder = obj.d.email;
+				$scope.setCareTakerZipFilter(obj.d.ZipCode);
 			}
 			$scope.fetchUserList = function(){
 				var q = '';
@@ -237,16 +254,7 @@
 					$scope.userReturnCount = 0;
 				}
 			}
-			$scope.selectUser = function(obj){
-				//console.log(obj);
-				//angular.element(item).data('id');
-				zip = obj.d.ZipCode;
-				$scope.setZip(zip);
-				/*if(obj.attributes['name'] == 'select_needer'){
-					zip = obj.attributes['data-zip'];
-					$scope.setZip(zip);
-				}*/
-			}
+			
 			$scope.removeUser = function(user_uid, type){
 				//alert(user_uid);
 				// Call service to remove user
@@ -287,23 +295,63 @@
 			}
 			$scope.formCluster = function(){
 				// Insert the user details into the matched clusters table
-				console.log($scope.selectedNeeder);
-				console.log($scope.selectedCareTakers);
-				return;
+				// get id of selected care takers
+				$scope.selectedCareTakers = [];
+				$scope.selectedCareTakersIndeces = [];
+				// Ideally, this would iterate over filteredNeeders since it has fewer items, but I can't figure out how rn.
+				for(var i = 0; i < $scope.careTakers.length; i++){
+					if($scope.careTakers[i].selected){
+						$scope.selectedCareTakers.push($scope.careTakers[i].email);
+						$scope.selectedCareTakersIndeces.push($scope.careTakers[i].$index);
+					}
+				}
+				
+				// Validate
+				var needer = $scope.selectedNeeder;
+				if(!needer || $scope.selectedNeederIndex == -1){
+					alert('No needer selected');
+					return false;
+				}
+				else if($scope.selectedCareTakers.length == 0 || $scope.selectedCareTakers.length > 3){
+					alert('Please select 1 - 3 care takers only');
+					return false;
+				}
+				var neederObj = $scope.needers[$scope.selectedNeederIndex];
+				var zip = neederObj.ZipCode;
+				var selectedCareTakersIndeces = $scope.selectedCareTakersIndeces;
+				//return;
+				
 				
 				// DEBUGGING:
-				var needer = {email : 'asdf1@no.com'}, zip = '12345', careTaker1 = {email : 'asdf2@no.com'}, careTaker2 = {email : 'asdf3@no.com'}, careTaker3 = {email : 'asdf4@no.com'}
+				//var careTaker1 = {email : 'asdf2@no.com'}, careTaker2 = {email : 'asdf3@no.com'}, careTaker3 = {email : 'asdf4@no.com'}
 				
 				
-				var extraJson = JSON.stringify([needer, careTaker1, careTaker2, careTaker3]);
 				var data = {
 					NeederEmail : needer.email,
 					ZipCodeCommon : zip,
-					Caretaker1Email : careTaker1.email,
-					Caretaker2Email : careTaker2.email,
-					Caretaker3Email : careTaker3.email,
-					ExtraJSONstrings : extraJson
+					Caretaker1Email : $scope.selectedCareTakers[0],
+					Caretaker2Email : '',
+					Caretaker3Email : '',
+					ExtraJSONstrings : ''
 				};
+				var extraJson;
+				if($scope.selectedCareTakers.length > 2){
+					// Three careTakers, set 1 and 2 and extraJson
+					data.CareTaker2Email = $scope.careTakers[1];
+					data.CareTaker3Email = $scope.careTakers[2];
+					extraJson = JSON.stringify([needer, $scope.careTakers[$scope.selectedCareTakersIndeces[0]], $scope.careTakers[$scope.selectedCareTakersIndeces[1]], $scope.careTakers[$scope.selectedCareTakersIndeces[2]]]);
+				}
+				else if($scope.selectedCareTakers.length > 1){
+					// Two careTakers, set 1 and extraJson
+					data.CareTaker2Email = $scope.selectedCareTakers[1];
+					extraJson = JSON.stringify([needer, $scope.careTakers[$scope.selectedCareTakersIndeces[0]], $scope.careTakers[$scope.selectedCareTakersIndeces[1]], '']);
+				}
+				else{
+					// One careTaker, just set extraJson
+					extraJson = JSON.stringify([needer, $scope.careTakers[$scope.selectedCareTakersIndeces[0]], '', '']);
+				}
+				data.ExtraJSONstrings = extraJson;
+				
 				$http.post($scope.apiHost + $scope.matchedClustersTable, data)
 				.then(function(){
 					console.log("formCluster returned");
