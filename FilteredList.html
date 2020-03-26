@@ -8,6 +8,9 @@
 	body{background-color: #f7f7f7;}
 	body>div{background-color: #fff; padding: 15px 0 15px 0;}
 	/*.nav-wrapper{margin: 25px 0 50px 0;}*/
+	.table td, .table th{
+		padding: 0;
+	}
 	.success-message{
 		background-color: lightgreen;
 		font-weight: bold;
@@ -26,10 +29,14 @@
 		height: 400px;
 		overflow: auto;
 	}
+	.list-container label{
+		display: block;
+		height: 100%;
+	}
 	</style>
 	</head>
     <body>
-      <div ng-app="myApp" ng-controller="myCtrl" class="container shadow-sm mb-5 light rounded"> <!--OVERALL CONTAINING DIV FOR STYLISTIC PURPOSES-->
+      <div ng-app="myApp" ng-controller="myCtrl" class="shadow-sm mb-5 light rounded"> <!--OVERALL CONTAINING DIV FOR STYLISTIC PURPOSES-->
         <div class="container p-0"> <!--CONTAINER DIV FOR HEADER AND NAV BAR-->
           <div class="row">
             <!-- <div class="container d-flex justify-content-center">
@@ -72,19 +79,19 @@
 			</center>
 		  </div>
 		  <br />
-          <div class="container"> <!--CONTAINER DIV FOR MAIN FILTERLIST CONTENT-->
+          <div> <!--CONTAINER DIV FOR MAIN FILTERLIST CONTENT-->
             <div class="row">
 			  <div class="success-message" ng-bind="successMessage"></div>
 			</div>
             <div class="row pl-4 pr-4">
-              <div class="col-md">
+              <div class="col-md-4">
 				  <h4>Needers {{filteredNeeders.length}} </h4>
-				  <div class="userListContainer">
+				  <div class="userListContainer list-container">
 					  <table class="table table-hover">
 						<thead>
 						  <tr>
 							<th></th>
-							<th>Zip Code</th>
+							<th>Zip</th>
 							<th>User</th>
 							<th>Needs</th>
 							<th>Delete</th>
@@ -92,10 +99,14 @@
 						</thead>
 						<tbody>
 						  <tr ng-repeat="d in needers | filter:neederZipFilter as filteredNeeders" data-uid="{{d._id}}">
-							<td><input type="radio" name="select_needer" ng-click="setNeeder(this)" ng-value="d._id" /></td>
-							<td>{{d.ZipCode}}</td>
+							<td><input type="radio" name="select_needer" ng-click="setNeeder(this)" ng-value="d._id" id="{{d._id}}}" /></td>
+							<td>
+								<label for="{{d._id}}}">{{d.ZipCode}}</label>
+							</td>
 							<td><a href="mailto:{{d.email}}">{{d.name}}</a></td>
-							<td>{{d.Description}}</td>
+							<td>
+								<label for="{{d._id}}}">{{d.Description}}</label>
+							</td>
 							<!-- Add Custom1 (tags) -->
 							<td><button name="remove_user" ng-click="removeUser(d._id, 'needers')">Delete</button></td>
 						  </tr>
@@ -103,14 +114,14 @@
 					  </table>
 				  </div>
 			  </div>
-              <div class="col-md">
+              <div class="col-md-4">
 				  <h4>Care Takers {{filteredCareTakers.length}}</h4>
 				  <div class="userListContainer">
 					  <table class="table table-hover">
 						<thead>
 						  <tr>
 							<th></th>
-							<th>Zip Code</th>
+							<th>Zip</th>
 							<th>User</th>
 							<th>Provides</th>
 							<th>Delete</th>
@@ -118,10 +129,14 @@
 						</thead>
 						<tbody>
 						  <tr ng-repeat="d in careTakers | filter:careTakerZipFilter as filteredCareTakers" data-uid="{{d._id}}">
-							<td><input type="checkbox" name="select_care_taker" ng-model="d.selected" checklist-value="d._id" /></td>
-							<td>{{d.ZipCode}}</td>
+							<td><input type="checkbox" name="select_care_taker" ng-model="d.selected" checklist-value="d._id" id="{{d._id}}" /></td>
+							<td>
+								<label for="{{d._id}}">{{d.ZipCode}}</label>
+							</td>
 							<td><a href="mailto:{{d.email}}">{{d.name}}</a></td>
-							<td>{{d.Description}}</td>
+							<td>
+								<label for="{{d._id}}">{{d.Description}}</label>
+							</td>
 							<!-- Add Custom1 (tags) -->
 							<td><button name="remove_user" ng-click="removeUser(d._id, 'careTakers')">Delete</button></td>
 						  </tr>
@@ -129,6 +144,32 @@
 					  </table>
 				  </div>
               </div>
+              <div class="col-md-4">
+				<h4>Existing Clusters {{filteredClusters.length}}</h4>
+				  <div class="userListContainer">
+					  <table class="table table-hover">
+						<thead>
+						  <tr>
+							<th>Zip</th>
+							<th>User</th>
+							<th>Care Takers</th>
+						  </tr>
+						</thead>
+						<tbody>
+						  <tr ng-repeat="d in clusters | filter:careTakerZipFilter as filteredClusters" data-uid="{{d._id}}">
+							<td>
+								{{d.ZipCodeCommon}}
+							</td>
+							<td><a href="mailto:{{d.NeederEmail}}">{{d.NeederEmail}}</a></td>
+							<td>
+								{{d.Caretaker1Email}}
+							</td>
+							<!-- Add Custom1 (tags) -->
+						  </tr>
+						</tbody>
+					  </table>
+				  </div>
+			  </div>
             </div>
           </div>
         </div>
@@ -165,6 +206,7 @@
 			$scope.zipButtons = '';
 			$scope.needers = [];
 			$scope.careTakers = [];
+			$scope.clusters = [];
 			$scope.f;
 			
 			/*
@@ -216,6 +258,15 @@
 				$http.get($scope.apiHost + $scope.careTakerTable + q)
 				.then(function(response) {
 					$scope.careTakers = response.data;
+					$scope.afterUserListFetches();
+				}, function (response){
+					$scope.handleApiError(response);
+					$scope.afterUserListFetches();
+				});
+				// Fetch clusters
+				$http.get($scope.apiHost + $scope.matchedClustersTable + q)
+				.then(function(response) {
+					$scope.clusters = response.data;
 					$scope.afterUserListFetches();
 				}, function (response){
 					$scope.handleApiError(response);
@@ -326,12 +377,12 @@
 				
 				data.ExtraJSONstrings = extraJsonStr;
 				
-				console.log(data.ExtraJSONstrings);
-				console.log(JSON.stringify(data));
+				//console.log(data.ExtraJSONstrings);
+				//console.log(JSON.stringify(data));
 				
 				$http.post($scope.apiHost + $scope.matchedClustersTable, data)
 				.then(function(){
-					console.log("formCluster returned");
+					//console.log("formCluster returned");
 				}, function(response){
 					$scope.handleApiError(response);
 				});
@@ -352,7 +403,7 @@
 				}, 2000);
 			}
 			$scope.handleApiError = function(response){
-				console.log(response);
+				//console.log(response);
 				$scope.displayFailure(response.statusText || "There was an error with your request");
 			}
 		});
