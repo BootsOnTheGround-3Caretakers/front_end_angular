@@ -22,6 +22,10 @@
 		padding: 6px;
 		font-weight: bold;
 	}
+	div.userListContainer{
+		height: 400px;
+		overflow: auto;
+	}
 	</style>
 	</head>
     <body>
@@ -74,56 +78,60 @@
 			</div>
             <div class="row pl-4 pr-4">
               <div class="col-md">
-			  <h4>Needers {{filteredNeeders.length}} </h4>
-              <table class="table table-hover">
-                <thead>
-                  <tr>
-                    <th></th>
-                    <th>Zip Code</th>
-                    <th>User</th>
-                    <th>Needs</th>
-                    <th>Delete</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr ng-repeat="d in needers | filter:neederZipFilter as filteredNeeders" data-uid="{{d._id}}">
-                    <td><input type="radio" name="select_needer" ng-click="setNeeder(this)" ng-value="d._id" /></td>
-                    <td>{{d.ZipCode}}</td>
-                    <td><a href="mailto:{{d.email}}">{{d.name}}</a></td>
-                    <td>{{d.Description}}</td>
-					<!-- Add Custom1 (tags) -->
-                    <td><button name="remove_user" ng-click="removeUser(d._id, 'needers')">Delete</button></td>
-                  </tr>
-                </tbody>
-              </table>
+				  <h4>Needers {{filteredNeeders.length}} </h4>
+				  <div class="userListContainer">
+					  <table class="table table-hover">
+						<thead>
+						  <tr>
+							<th></th>
+							<th>Zip Code</th>
+							<th>User</th>
+							<th>Needs</th>
+							<th>Delete</th>
+						  </tr>
+						</thead>
+						<tbody>
+						  <tr ng-repeat="d in needers | filter:neederZipFilter as filteredNeeders" data-uid="{{d._id}}">
+							<td><input type="radio" name="select_needer" ng-click="setNeeder(this)" ng-value="d._id" /></td>
+							<td>{{d.ZipCode}}</td>
+							<td><a href="mailto:{{d.email}}">{{d.name}}</a></td>
+							<td>{{d.Description}}</td>
+							<!-- Add Custom1 (tags) -->
+							<td><button name="remove_user" ng-click="removeUser(d._id, 'needers')">Delete</button></td>
+						  </tr>
+						</tbody>
+					  </table>
+				  </div>
 			  </div>
               <div class="col-md">
-              <h4>Care Takers {{filteredCareTakers.length}}</h4>
-              <table class="table table-hover">
-                <thead>
-                  <tr>
-                    <th></th>
-                    <th>Zip Code</th>
-                    <th>User</th>
-                    <th>Provides</th>
-                    <th>Delete</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr ng-repeat="d in careTakers | filter:careTakerZipFilter as filteredCareTakers" data-uid="{{d._id}}">
-                    <td><input type="checkbox" name="select_care_taker" ng-model="d.selected" checklist-value="d._id" /></td>
-                    <td>{{d.ZipCode}}</td>
-                    <td><a href="mailto:{{d.email}}">{{d.name}}</a></td>
-                    <td>{{d.Description}}</td>
-					<!-- Add Custom1 (tags) -->
-                    <td><button name="remove_user" ng-click="removeUser(d._id, 'careTakers')">Delete</button></td>
-                  </tr>
-                </tbody>
-              </table>
-              </div>
+				  <h4>Care Takers {{filteredCareTakers.length}}</h4>
+				  <div class="userListContainer">
+					  <table class="table table-hover">
+						<thead>
+						  <tr>
+							<th></th>
+							<th>Zip Code</th>
+							<th>User</th>
+							<th>Provides</th>
+							<th>Delete</th>
+						  </tr>
+						</thead>
+						<tbody>
+						  <tr ng-repeat="d in careTakers | filter:careTakerZipFilter as filteredCareTakers" data-uid="{{d._id}}">
+							<td><input type="checkbox" name="select_care_taker" ng-model="d.selected" checklist-value="d._id" /></td>
+							<td>{{d.ZipCode}}</td>
+							<td><a href="mailto:{{d.email}}">{{d.name}}</a></td>
+							<td>{{d.Description}}</td>
+							<!-- Add Custom1 (tags) -->
+							<td><button name="remove_user" ng-click="removeUser(d._id, 'careTakers')">Delete</button></td>
+						  </tr>
+						</tbody>
+					  </table>
+				  </div>
               </div>
             </div>
           </div>
+        </div>
 		<div class="container pt-4 pb-2"> <!--CONTAINER DIV FOR FOOTER AND ADDITIONAL INFO-->
 		  <div class="row">
 			<div class="container d-flex justify-content-center">
@@ -296,44 +304,27 @@
 					alert('No needer selected');
 					return false;
 				}
-				else if(selectedCareTakers.length == 0 || selectedCareTakers.length > 3){
-					alert('Please select 1 - 3 care takers only');
+				else if(selectedCareTakers.length > 10){
+					alert('Care takers cannot exceed 10');
 					return false;
 				}
 				
 				// Prepare data
 				var data = {
 					NeederEmail : needer.email,
-					ZipCodeCommon : needer.ZipCode,
-					Caretaker1Email : selectedCareTakers[0].email
+					ZipCodeCommon : needer.ZipCode
 				};
-				var extraJson;
-				if(selectedCareTakers.length > 2){
-					//console.log('Here 1');
-					// Three careTakers, set 1 and 2 and extraJson
-					data.Caretaker2Email = selectedCareTakers[1].email;
-					data.Caretaker3Email = selectedCareTakers[2].email;
-					extraJson = angular.toJson([needer,
-							selectedCareTakers[0],
-							selectedCareTakers[1],
-							selectedCareTakers[2]]);
+				var extraJsonObj = [], extraJsonStr;
+				extraJsonObj.push(needer);
+				
+				for(var i = 0; i < selectedCareTakers.length; i++){
+					var propName = 'Caretaker' + i+1 + 'Email';
+					data[propName] = selectedCareTakers[i].email;
+					extraJsonObj.push(selectedCareTakers[i]);
 				}
-				else if(selectedCareTakers.length > 1){
-					//console.log('Here 2');
-					// Two careTakers, set 1 and extraJson
-					data.Caretaker2Email = selectedCareTakers[1].email;
-					console.log(selectedCareTakers[0]);
-					extraJson = angular.toJson([needer,
-							selectedCareTakers[0],
-							selectedCareTakers[1], '']);
-				}
-				else{
-					//console.log('Here 3');
-					// One careTaker, just set extraJson
-					extraJson = angular.toJson([needer,
-							selectedCareTakers[0], '', '']);
-				}
-				data.ExtraJSONstrings = extraJson;
+				extraJsonStr = angular.toJson(extraJsonObj);
+				
+				data.ExtraJSONstrings = extraJsonStr;
 				
 				console.log(data.ExtraJSONstrings);
 				console.log(JSON.stringify(data));
@@ -347,11 +338,9 @@
 				
 				// Delete the selected records
 				$scope.removeUser(needer._id, 'needers');
-				$scope.removeUser(selectedCareTakers[0]._id, 'careTakers');
-				if(selectedCareTakers.length > 1)
-					$scope.removeUser(selectedCareTakers[1]._id, 'careTakers');
-				if(selectedCareTakers.length > 2)
-					$scope.removeUser(selectedCareTakers[2]._id, 'careTakers');
+				for(var i = 0; i < selectedCareTakers.length; i++){
+					$scope.removeUser(selectedCareTakers[i]._id, 'careTakers');
+				}
 			}
 			$scope.displayFailure = function(message){
 				alert(message);
