@@ -3,7 +3,7 @@
   <head>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
     <!-- <link rel="stylesheet" type="text/css" href="main.css"> -->
-	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular.min.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.7.9/angular.min.js"></script>
 	<style type="text/css">
 	body{background-color: #f7f7f7;}
 	body>div{background-color: #fff; padding: 15px 0 15px 0;}
@@ -15,7 +15,7 @@
 		background-color: lightgreen;
 		font-weight: bold;
 	}
-	.zip-buttons>button{
+	.zip-buttons>button, .need-buttons>button{
 		margin: 0 10px;
 	}
 	button.form-cluster{
@@ -25,7 +25,7 @@
 		padding: 6px;
 		font-weight: bold;
 	}
-	div.userListContainer{
+	div.user-list-container{
 		height: 400px;
 		overflow: auto;
 	}
@@ -46,9 +46,14 @@
         </div>
           <div class="row">
             <div class="container d-flex justify-content-center">
-                <h1>People by Postal Code</h1>
+                <h3>Boots on the Ground - 3 Caretakers</h3><br />
             </div>
           </div>
+          <div class="row">
+			<div class="container d-flex justify-content-center">
+                <h2>Admin - Form Clusters</h2>
+			</div>
+		  </div>
           <div class="row nav-wrapper">
               <nav class="navbar navbar-light bg-light col-lg-12 justify-content-center">
                 <ul class="nav nav-tabs">
@@ -65,8 +70,8 @@
               </nav>
           </div>
 		  <div class="container">
-			<h4>Zip Code Lookup</h4>
 			<span class="zip-buttons">
+				<strong>Zip code filters:</strong>
 				<button ng-repeat="(key,val) in zipSummary" ng-click="setZip(key)">{{key}} - {{val.needers}} : {{val.careTakers}}</button>
 				<!-- <button ng-click="fetchDistinctZips()">&gt;</button> -->
 				<button ng-click="setZip()" title="Clear filter">X</button>
@@ -74,8 +79,19 @@
 			</span>
 			<br />
 			<br />
+			<span class="need-buttons">
+				<strong>Need Filters:</strong>
+				<button ng-repeat="(key,val) in needs" ng-click="setNeedFilter(val)">{{key}}</button>
+				<button ng-click="setNeedFilter()" title="Clear filter">X</button>
+			</span>
+			<br />
+			<br />
 			<center>
 				<button class="form-cluster" ng-click="formCluster()">Form Cluster</button>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				<input type="checkbox" ng-model="includeClustered" value="1" id="includeClustered" />
+				<label for="includeClustered">Include Cluster Table</label>
+				<!-- Maybe default to not checked and only fetching data when checked -->
 			</center>
 		  </div>
 		  <br />
@@ -84,9 +100,10 @@
 			  <div class="success-message" ng-bind="successMessage"></div>
 			</div>
             <div class="row pl-4 pr-4">
-              <div class="col-md-4">
+              <!-- <div class="col-md-4"> -->
+              <div class="{{includeClustered ? 'col-md-4' : 'col-md-6'}}">
 				  <h4>Needers {{filteredNeeders.length}} </h4>
-				  <div class="userListContainer list-container">
+				  <div class="user-list-container list-container">
 					  <table class="table table-hover">
 						<thead>
 						  <tr>
@@ -98,7 +115,7 @@
 						  </tr>
 						</thead>
 						<tbody>
-						  <tr ng-repeat="d in needers | filter:neederZipFilter as filteredNeeders" data-uid="{{d._id}}">
+						  <tr ng-repeat="d in needers | filter:{ZipCode:neederZipFilter} as filteredNeeders" data-uid="{{d._id}}">
 							<td><input type="radio" name="select_needer" ng-click="setNeeder(this)" ng-value="d._id" id="{{d._id}}}" /></td>
 							<td>
 								<label for="{{d._id}}}">{{d.ZipCode}}</label>
@@ -108,15 +125,15 @@
 								<label for="{{d._id}}}">{{d.Description}}</label>
 							</td>
 							<!-- Add Custom1 (tags) -->
-							<td><button name="remove_user" ng-click="removeUser(d._id, 'needers')">Delete</button></td>
+							<td><button name="remove_user" class="btn btn-outline-danger" ng-click="removeUser(d._id, 'needers')">X</button></td>
 						  </tr>
 						</tbody>
 					  </table>
 				  </div>
 			  </div>
-              <div class="col-md-4">
+              <div class="{{includeClustered ? 'col-md-4' : 'col-md-6'}}">
 				  <h4>Care Takers {{filteredCareTakers.length}}</h4>
-				  <div class="userListContainer">
+				  <div class="user-list-container">
 					  <table class="table table-hover">
 						<thead>
 						  <tr>
@@ -128,7 +145,7 @@
 						  </tr>
 						</thead>
 						<tbody>
-						  <tr ng-repeat="d in careTakers | filter:careTakerZipFilter as filteredCareTakers" data-uid="{{d._id}}">
+						  <tr ng-repeat="d in careTakers | filter:{ZipCode:careTakerZipFilter, Description:needFilter} as filteredCareTakers" data-uid="{{d._id}}">
 							<td><input type="checkbox" name="select_care_taker" ng-model="d.selected" checklist-value="d._id" id="{{d._id}}" /></td>
 							<td>
 								<label for="{{d._id}}">{{d.ZipCode}}</label>
@@ -138,15 +155,15 @@
 								<label for="{{d._id}}">{{d.Description}}</label>
 							</td>
 							<!-- Add Custom1 (tags) -->
-							<td><button name="remove_user" ng-click="removeUser(d._id, 'careTakers')">Delete</button></td>
+							<td><button name="remove_user" class="btn btn-outline-danger" ng-click="removeUser(d._id, 'careTakers')">X</button></td>
 						  </tr>
 						</tbody>
 					  </table>
 				  </div>
               </div>
-              <div class="col-md-4">
+              <div class="col-md-4" ng-show="includeClustered">
 				<h4>Existing Clusters {{filteredClusters.length}}</h4>
-				  <div class="userListContainer">
+				  <div class="user-list-container">
 					  <table class="table table-hover">
 						<thead>
 						  <tr>
@@ -156,7 +173,7 @@
 						  </tr>
 						</thead>
 						<tbody>
-						  <tr ng-repeat="d in clusters | filter:careTakerZipFilter as filteredClusters" data-uid="{{d._id}}">
+						  <tr ng-repeat="d in clusters | filter:{_id:careTakerZipFilter} as filteredClusters" data-uid="{{d._id}}">
 							<td>
 								{{d.ZipCodeCommon}}
 							</td>
@@ -186,7 +203,7 @@
 		</div>
 		<script>
 		// var data = [{"_id":"5e779f0b6cbfc12a075f143b","email":"howard@notreal.com","name":"Howard Humphries","ZipCode":"94703","Description":"Deliveries needed","__v":0},{"_id":"5e779f0b6cbfc12a075f143d","email":"betty@notreal.com","name":"Betty Crocker","ZipCode":"10034","Description":"Deliveries needed","__v":0},{"_id":"5e779f0b6cbfc12a075f143e","email":"casey@notreal.com","name":"Casey Casum","ZipCode":"94703","Description":"Babysitting","__v":0}]
-		
+		//import {MatSortModule} from '@angular/material/sort';
 		// Filter by zip: http://c29a9953.ngrok.io/api/v1/NeedersLookingForMatch?query=%7B%22ZipCode%22:%2294703%22%7D
 		var app = angular.module('myApp', []);
 		app.controller('myCtrl', function($scope, $http) {
@@ -197,9 +214,14 @@
 			$scope.successMessage = '';
 			$scope.userReturnCount = 0;
 			
+			$scope.needs = {'Delivery': 'Deliver', 'Babysitting': 'Babysitting', 'Emotional Support': 'Emotional Support', 'Water': 'Water'};
+			$scope.needFilter;
 			$scope.selectedNeeder;
 			$scope.neederZipFilter;
 			$scope.careTakerZipFilter;
+			$scope.f;
+			$scope.propertyName = 'name';
+			$scope.reverse = true;
 			
 			$scope.zip;
 			$scope.zipSummary = {};
@@ -207,7 +229,6 @@
 			$scope.needers = [];
 			$scope.careTakers = [];
 			$scope.clusters = [];
-			$scope.f;
 			
 			/*
 			// DO NOT DELETE YET
@@ -235,10 +256,14 @@
 			$scope.setCareTakerZipFilter = function(zip){
 				$scope.careTakerZipFilter = zip;
 			}
+			$scope.setNeedFilter = function(need){
+				$scope.needFilter = need;
+			}
 			$scope.setNeeder = function(obj){
 				//console.log(obj);
 				$scope.selectedNeeder = obj.d;
 				$scope.setCareTakerZipFilter(obj.d.ZipCode);
+				$scope.setNeedFilter(obj.d.Description);
 			}
 			$scope.fetchUserList = function(){
 				var q = '';
@@ -302,6 +327,10 @@
 				}
 			}
 			
+			$scope.sortNeeders = function(prop){
+				$scope.reverse = ($scope.propertyName == prop) ? !$scope.reverse : false;
+				$scope.propertyName = prop;
+			}
 			$scope.removeUser = function(user_uid, type){
 				// Call service to remove user
 				if(type == "needers"){
