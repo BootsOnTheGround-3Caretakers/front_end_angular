@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <!-- <link rel="stylesheet" type="text/css" href="main.css"> -->
+	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.7.9/angular.min.js"></script>
+	<style type="text/css">
+	body{background-color: #f7f7f7;}
+	body>div{background-color: #fff; padding: 15px 0 15px 0;}
+	/*.nav-wrapper{margin: 25px 0 50px 0;}*/
+	.table td, .table th{
+		padding: 0;
+	}
+	.success-message{
+		background-color: lightgreen;
+		font-weight: bold;
+	}
+	.zip-buttons>button, .need-buttons>button{
+		margin: 0 10px;
+	}
+	button.form-cluster{
+		background-color: lightgreen;
+		border: 1px solid green;
+		border-radius: 5px;
+		padding: 6px;
+		font-weight: bold;
+	}
+	div.user-list-container{
+		height: 400px;
+		overflow: auto;
+	}
+	.list-container label{
+		display: block;
+		height: 100%;
+	}
+	</style>
+	</head>
+    <body>
+      <div ng-app="myApp" ng-controller="myCtrl" class="shadow-sm mb-5 light rounded container"> <!--OVERALL CONTAINING DIV FOR STYLISTIC PURPOSES-->
+        <h1>Create Account</h1>
+		<h3>This is not intended to be used for the live system, this is just to make it easy for developers to add test data.</h3>
+		<div class="row">
+			<div class="success-message" ng-bind="successMessage"></div>
+		</div>
+		<table class="table form-table">
+			<tr>
+				<th>Full Name</th>
+			</tr>
+			<tr>
+				<td><input type="text" name="name" ng-model="name" /></td>
+			</tr>
+			<tr>
+				<th>Email</th>
+			</tr>
+			<tr>
+				<td><input type="text" name="email" ng-model="email" /></td>
+			</tr>
+			<tr>
+				<th>Public Screen Name</th>
+			</tr>
+			<tr>
+				<td><input type="text" name="alias" ng-model="alias" /></td>
+			</tr>
+			<tr>
+				<th>Zip Code</th>
+			</tr>
+			<tr>
+				<td><input type="text" name="ZipCode" ng-model="ZipCode" /></td>
+			</tr>
+			<tr>
+				<th>Do you need help or can you provide help?</th>
+			</tr>
+			<tr>
+				<td>
+					<input type="radio" name="needProvide" value="need" ng-model="needProvide" id="needProvide-need" />
+					<label for="needProvide-need">Need help</label>
+					<input type="radio" name="needProvide" value="provide" ng-model="needProvide" id="needProvide-provide" />
+					<label for="needProvide-provide">Provide help</label>
+				</td>
+			</tr>
+			<tr>
+				<th>What do you need or can provide?</th>
+			</tr>
+			<tr>
+				<td>
+					<!-- <input type="text" name="Description" ng-model="Description" /> -->
+					<label ng-repeat="(key,val) in needs" for="needs-{{key}}">
+						<input type="radio" name="needs" ng-click="changeNeed(key)" id="needs-{{key}}">
+						{{key}} &nbsp;</label>
+					<br />
+					<strong>Specific Need:</strong><br />
+					<span ng-repeat="n in needs[needKey]">
+						<label for="specific-need-{{n}}">
+							<input type="radio" name="specific-need" id="specific-need-{{n}}" ng-click="setSpecificNeed(n)" />
+							{{n}} &nbsp;
+						</label>
+						<br />
+					</span>
+				</td>
+			</tr>
+			<tr>
+				<th>Special cases (tags)</th>
+			</tr>
+			<tr>
+				<td>
+					<!-- <input type="text" name="Hashtags" ng-model="Hashtags" /> -->
+					<label ng-repeat="t in tags" for="hashtag-{{t.val}}">
+						<input type="checkbox" name="tag" id="hashtag-{{t.val}}" ng-model="t.selected" />
+						{{t.val}} &nbsp;
+					</label>
+				</td>
+			</tr>
+		</table>
+		<button name="add" ng-click="addUser()">Create User</button>
+	  </div>
+	
+		<script>
+		// var data = [{"_id":"5e779f0b6cbfc12a075f143b","email":"howard@notreal.com","name":"Howard Humphries","ZipCode":"94703","Description":"Deliveries needed","__v":0},{"_id":"5e779f0b6cbfc12a075f143d","email":"betty@notreal.com","name":"Betty Crocker","ZipCode":"10034","Description":"Deliveries needed","__v":0},{"_id":"5e779f0b6cbfc12a075f143e","email":"casey@notreal.com","name":"Casey Casum","ZipCode":"94703","Description":"Babysitting","__v":0}]
+		//import {MatSortModule} from '@angular/material/sort';
+		// Filter by zip: http://c29a9953.ngrok.io/api/v1/NeedersLookingForMatch?query=%7B%22ZipCode%22:%2294703%22%7D
+		var app = angular.module('myApp', []);
+		app.controller('myCtrl', function($scope, $http) {
+			$scope.apiHost = 'http://c29a9953.ngrok.io/api/v1/';
+			$scope.neederTable = 'NeedersLookingForMatch';
+			$scope.careTakerTable = 'CaretakersLookingForMatch';
+			$scope.successMessage = '';
+			$scope.failureMessage = '';
+			
+			$scope.needs = {'Deliveries' : ['General Deliveries', 'Water Deliveries', 'Food Deliveries', 'Medicine Deliveries'],
+				'Home Help' : ['General Home Help', 'Babysitting Home Help', 'Fixing Home Help'],
+				'Remote Help' : ['General Remote Help', 'Emotional Support Remote Help']
+			};
+			$scope.needKey;
+			
+			$scope.tags = [{val : 'Catholic', selected : false}, {val : 'LGBTQ', selected : false}];
+			
+			$scope.name;
+			$scope.email;
+			$scope.alias;
+			$scope.ZipCode;
+			$scope.needProvide;
+			$scope.Description;
+			$scope.Hashtags;
+			
+			$scope.changeNeed = function(key){
+				$scope.needKey = key;
+			}
+			$scope.setSpecificNeed = function(val){
+				$scope.Description = val;
+			}
+			$scope.addUser = function(){
+				var targetTable;
+				var tags = '';
+				
+				for(var i = 0; i < $scope.tags.length; i++){
+					if($scope.tags[i].selected)
+						tags += $scope.tags[i].val + ' ';
+				}
+				
+				var data = {
+					name : $scope.name,
+					email : $scope.email,
+					ZipCode : $scope.ZipCode,
+					Description : $scope.Description,
+					Hashtags : tags
+				};
+				
+				if($scope.needProvide == 'need'){
+					targetTable = $scope.neederTable;
+				}
+				else if($scope.needProvide == 'provide'){
+					targetTable = $scope.careTakerTable;
+				}
+				else{
+					console.log("Not enought data to post");
+					return;
+				}
+				
+				console.log(JSON.stringify(data));
+				
+				$http.post($scope.apiHost + targetTable, data)
+				.then(function(){
+					$scope.displaySuccess("Successfully created user");
+					console.log("added user");
+				}, function(response){
+					$scope.handleApiError(response);
+				});
+				
+			}
+			
+			$scope.displayFailure = function(message){
+				alert(message);
+			}
+			$scope.handleApiError = function(response){
+				//console.log(response);
+				$scope.displayFailure(response.statusText || "There was an error with your request");
+			}
+			$scope.displaySuccess = function(message){
+				$scope.successMessage = message;
+				setTimeout( function() {
+					console.log('removing message');
+					$scope.successMessage = '';
+				}, 2000);
+			}
+		});
+	  </script>
+	</body>
+</html>
+	
