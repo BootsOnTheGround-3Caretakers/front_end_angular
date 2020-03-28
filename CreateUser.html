@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
+	<title>Create User</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
     <!-- <link rel="stylesheet" type="text/css" href="main.css"> -->
 	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.7.9/angular.min.js"></script>
@@ -40,7 +41,7 @@
         <h1>Create Account</h1>
 		<h3>This is not intended to be used for the live system, this is just to make it easy for developers to add test data.</h3>
 		<div class="row">
-			<div class="success-message" ng-bind="successMessage"></div>
+			<div class="success-message" ng-bind="successMessage" ng-show="(includeClustered != '')"></div>
 		</div>
 		<table class="table form-table">
 			<tr>
@@ -77,6 +78,18 @@
 					<input type="radio" name="needProvide" value="provide" ng-model="needProvide" id="needProvide-provide" />
 					<label for="needProvide-provide">Provide help</label>
 				</td>
+			</tr>
+			<tr>
+				<th>Requested cluster size</th>
+			</tr>
+			<tr>
+				<td><input type="text" name="RequestedClusterSize" ng-model="RequestedClusterSize" value="3" /></td>
+			</tr>
+			<tr>
+				<th>Slot count</th>
+			</tr>
+			<tr>
+				<td><input type="text" name="SlotCount" ng-model="SlotCount" value="6" /></td>
 			</tr>
 			<tr>
 				<th>What do you need or can provide?</th>
@@ -138,6 +151,8 @@
 			$scope.email;
 			$scope.alias;
 			$scope.ZipCode;
+			$scope.RequestedClusterSize = 3;
+			$scope.SlotCount = 6;
 			$scope.needProvide;
 			$scope.Description;
 			$scope.Hashtags;
@@ -167,9 +182,11 @@
 				
 				if($scope.needProvide == 'need'){
 					targetTable = $scope.neederTable;
+					data.RequestedClusterSize = $scope.RequestedClusterSize;
 				}
 				else if($scope.needProvide == 'provide'){
 					targetTable = $scope.careTakerTable;
+					data.SlotCount = $scope.SlotCount;
 				}
 				else{
 					console.log("Not enought data to post");
