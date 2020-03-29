@@ -196,9 +196,10 @@
 				console.log(JSON.stringify(data));
 				
 				$http.post($scope.apiHost + targetTable, data)
-				.then(function(){
+				.then(function(response){
 					$scope.displaySuccess("Successfully created user");
 					console.log("added user");
+					console.log(response);
 				}, function(response){
 					$scope.handleApiError(response);
 				});
