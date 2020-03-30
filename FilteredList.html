@@ -4,6 +4,7 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
     <!-- <link rel="stylesheet" type="text/css" href="main.css"> -->
 	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.7.9/angular.min.js"></script>
+	<title>Admin - Form Clusters</title>
 	<style type="text/css">
 	body{background-color: #f7f7f7;}
 	body>div{background-color: #fff; padding: 15px 0 15px 0;}
@@ -37,18 +38,18 @@
 	</head>
     <body>
       <div ng-app="myApp" ng-controller="myCtrl" class="shadow-sm mb-5 light rounded"> <!--OVERALL CONTAINING DIV FOR STYLISTIC PURPOSES-->
-        <div class="container p-0"> <!--CONTAINER DIV FOR HEADER AND NAV BAR-->
-          <div class="row">
-            <!-- <div class="container d-flex justify-content-center">
-                <img style="width: 225px; height: 225px;" src="http://alexdomzalski.com/botglogo.png">
-            </div> -->
-          </div>
-        </div>
-          <div class="row">
-            <div class="container d-flex justify-content-center">
-                <h3>Boots on the Ground - 3 Caretakers</h3><br />
-            </div>
-          </div>
+		  <div class="container p-0"> <!--CONTAINER DIV FOR HEADER AND NAV BAR-->
+			  <div class="row">
+				<!-- <div class="container d-flex justify-content-center">
+					<img style="width: 225px; height: 225px;" src="http://alexdomzalski.com/botglogo.png">
+				</div> -->
+			  </div>
+		  </div>
+		  <div class="row">
+			<div class="container d-flex justify-content-center">
+				<h3>Boots on the Ground - 3 Caretakers</h3><br />
+			</div>
+		  </div>
           <div class="row">
 			<div class="container d-flex justify-content-center">
                 <h2>Admin - Form Clusters</h2>
@@ -71,16 +72,16 @@
           </div>
 		  <div class="container">
 			<span class="zip-buttons">
-				<strong>Zip code filters:</strong>
+				<strong>Zip code filters:</strong><br />
 				<button ng-repeat="(key,val) in zipSummary" ng-click="setZip(key)">{{key}} - {{val.needers}} : {{val.careTakers}}</button>
 				<!-- <button ng-click="fetchDistinctZips()">&gt;</button> -->
-				<button ng-click="setZip()" title="Clear filter">X</button>
+				<button ng-click="setZip()" title="Clear filter">X</button><br />
 				Zip code: <input ng-model="zip" /> <button name="search" ng-click="fetchUserList()">Search</button>
 			</span>
 			<br />
 			<br />
 			<span class="need-buttons">
-				<strong>Need Filters:</strong>
+				<strong>Need Filters:</strong><br />
 				<button ng-repeat="(key,val) in needs" ng-click="setNeedFilter(val)">{{key}}</button>
 				<button ng-click="setNeedFilter()" title="Clear filter">X</button>
 			</span>
@@ -89,7 +90,7 @@
 			<center>
 				<button class="form-cluster" ng-click="formCluster()">Form Cluster</button>
 				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-				<input type="checkbox" ng-model="includeClustered" value="1" id="includeClustered" />
+				<input type="checkbox" ng-model="includeClustered" value="1" id="includeClustered" checked="checked" ng-init="includeClustered=true" />
 				<label for="includeClustered">Include Cluster Table</label>
 				<!-- Maybe default to not checked and only fetching data when checked -->
 			</center>
@@ -100,7 +101,6 @@
 			  <div class="success-message" ng-bind="successMessage"></div>
 			</div>
             <div class="row pl-4 pr-4">
-              <!-- <div class="col-md-4"> -->
               <div class="{{includeClustered ? 'col-md-4' : 'col-md-6'}}">
 				  <h4>Needers {{filteredNeeders.length}} </h4>
 				  <div class="user-list-container list-container">
@@ -108,23 +108,26 @@
 						<thead>
 						  <tr>
 							<th></th>
-							<th>Zip</th>
-							<th>User</th>
-							<th>Needs</th>
+							<th><a href="javascript:void(0);" ng-click="neederOrderBy('ZipCode')">Zip</a></th>
+							<th><a href="javascript:void(0);" ng-click="neederOrderBy('name')">User</a></th>
+							<th><a href="javascript:void(0);" ng-click="neederOrderBy('Description')">Needs</a></th>
+							<th><a href="javascript:void(0);" ng-click="neederOrderBy('Hashtags')">Tags</a></th>
 							<th>Delete</th>
 						  </tr>
 						</thead>
 						<tbody>
-						  <tr ng-repeat="d in needers | filter:{ZipCode:neederZipFilter} as filteredNeeders" data-uid="{{d._id}}">
+						  <tr data-ng-repeat="d in filteredNeeders | orderBy : neederOrderByVar" data-uid="{{d._id}}">
 							<td><input type="radio" name="select_needer" ng-click="setNeeder(this)" ng-value="d._id" id="{{d._id}}}" /></td>
 							<td>
 								<label for="{{d._id}}}">{{d.ZipCode}}</label>
 							</td>
-							<td><a href="mailto:{{d.email}}">{{d.name}}</a></td>
+							<td><a href="mailto:{{d.email}}">{{d.name}}</a> ({{d.RequestedClusterSize || 3}})</td>
 							<td>
 								<label for="{{d._id}}}">{{d.Description}}</label>
 							</td>
-							<!-- Add Custom1 (tags) -->
+							<td>
+								<label for="{{d._id}}}">{{d.Hashtags}}</label>
+							</td>
 							<td><button name="remove_user" class="btn btn-outline-danger" ng-click="removeUser(d._id, 'needers')">X</button></td>
 						  </tr>
 						</tbody>
@@ -138,23 +141,39 @@
 						<thead>
 						  <tr>
 							<th></th>
-							<th>Zip</th>
-							<th>User</th>
-							<th>Provides</th>
-							<th>Delete</th>
+							<th><a href="javascript:void(0);" ng-click="careTakerOrderBy('ZipCode')">Zip</a></th>
+							<th><a href="javascript:void(0);" ng-click="careTakerOrderBy('name')">User</a></th>
+							<th><a href="javascript:void(0);" ng-click="careTakerOrderBy('Description')">Provides</a></th>
+							<th><a href="javascript:void(0);" ng-click="careTakerOrderBy('Hashtags')">Tags</a></th>
 						  </tr>
 						</thead>
 						<tbody>
-						  <tr ng-repeat="d in careTakers | filter:{ZipCode:careTakerZipFilter, Description:needFilter} as filteredCareTakers" data-uid="{{d._id}}">
+						  <!-- <tr ng-repeat="d in careTakers | filter:{ZipCode:careTakerZipFilter, Description:needFilter} as filteredCareTakers" data-uid="{{d._id}}">
 							<td><input type="checkbox" name="select_care_taker" ng-model="d.selected" checklist-value="d._id" id="{{d._id}}" /></td>
 							<td>
 								<label for="{{d._id}}">{{d.ZipCode}}</label>
 							</td>
-							<td><a href="mailto:{{d.email}}">{{d.name}}</a></td>
+							<td><a href="mailto:{{d.email}}">{{d.name}}</a> ({{d.SlotCount || 1}})</td>
 							<td>
 								<label for="{{d._id}}">{{d.Description}}</label>
 							</td>
-							<!-- Add Custom1 (tags) -->
+							<td>
+								<label for="{{d._id}}">{{d.Hashtags}}</label>
+							</td>
+							<td><button name="remove_user" class="btn btn-outline-danger" ng-click="removeUser(d._id, 'careTakers')">X</button></td>
+						  </tr> -->
+						  <tr ng-repeat="d in filteredCareTakers | orderBy : careTakerOrderByVar" data-uid="{{d._id}}">
+							<td><input type="checkbox" name="select_care_taker" ng-model="d.selected" checklist-value="d._id" id="{{d._id}}" /></td>
+							<td>
+								<label for="{{d._id}}">{{d.ZipCode}}</label>
+							</td>
+							<td><a href="mailto:{{d.email}}">{{d.name}}</a> ({{d.SlotCount || 1}})</td>
+							<td>
+								<label for="{{d._id}}">{{d.Description}}</label>
+							</td>
+							<td>
+								<label for="{{d._id}}">{{d.Hashtags}}</label>
+							</td>
 							<td><button name="remove_user" class="btn btn-outline-danger" ng-click="removeUser(d._id, 'careTakers')">X</button></td>
 						  </tr>
 						</tbody>
@@ -169,7 +188,8 @@
 						  <tr>
 							<th>Zip</th>
 							<th>User</th>
-							<th>Care Takers</th>
+							<!-- <th>Care Takers</th> -->
+							<th>Delete</th>
 						  </tr>
 						</thead>
 						<tbody>
@@ -178,10 +198,11 @@
 								{{d.ZipCodeCommon}}
 							</td>
 							<td><a href="mailto:{{d.NeederEmail}}">{{d.NeederEmail}}</a></td>
-							<td>
+							<!-- <td>
 								{{d.Caretaker1Email}}
-							</td>
+							</td> -->
 							<!-- Add Custom1 (tags) -->
+							<td><button name="remove_cluster" class="btn btn-outline-danger" ng-click="removeCluster(this)">X</button></td>
 						  </tr>
 						</tbody>
 					  </table>
@@ -190,6 +211,14 @@
             </div>
           </div>
         </div>
+		<div class="container pt-4 pb-2"> <!--CONTAINER DIV FOR FOOTER AND ADDITIONAL INFO-->
+		  <div class="row">
+			<div class="container d-flex justify-content-center">
+				<hr />
+				
+			</div>
+		  </div>
+		</div>
 		<div class="container pt-4 pb-2"> <!--CONTAINER DIV FOR FOOTER AND ADDITIONAL INFO-->
 		  <div class="row">
 			<div class="container d-flex justify-content-center">
@@ -206,7 +235,8 @@
 		//import {MatSortModule} from '@angular/material/sort';
 		// Filter by zip: http://c29a9953.ngrok.io/api/v1/NeedersLookingForMatch?query=%7B%22ZipCode%22:%2294703%22%7D
 		var app = angular.module('myApp', []);
-		app.controller('myCtrl', function($scope, $http) {
+		app.controller('myCtrl', function($scope, $filter, $http) {
+			$scope.useAPI = true;
 			$scope.apiHost = 'http://c29a9953.ngrok.io/api/v1/';
 			$scope.neederTable = 'NeedersLookingForMatch';
 			$scope.careTakerTable = 'CaretakersLookingForMatch';
@@ -214,18 +244,21 @@
 			$scope.successMessage = '';
 			$scope.userReturnCount = 0;
 			
+			//$scope.includeClustered = 1;
 			$scope.needs = {'Delivery': 'Deliver', 'Babysitting': 'Babysitting', 'Emotional Support': 'Emotional Support', 'Water': 'Water'};
 			$scope.needFilter;
 			$scope.selectedNeeder;
 			$scope.neederZipFilter;
+			$scope.neederOrderByVar = 'name';
 			$scope.careTakerZipFilter;
+			$scope.careTakerOrderByVar = 'name';
 			$scope.f;
 			$scope.propertyName = 'name';
 			$scope.reverse = true;
-			
 			$scope.zip;
 			$scope.zipSummary = {};
 			$scope.zipButtons = '';
+			
 			$scope.needers = [];
 			$scope.careTakers = [];
 			$scope.clusters = [];
@@ -248,16 +281,49 @@
 			}
 			$scope.fetchDistinctZips();
 			*/
+			$scope.filterNeeders = function(){
+				$scope.filteredNeeders = $scope.needers.filter(function(d){
+					return (!$scope.neederZipFilter || d.ZipCode == $scope.neederZipFilter);
+				});
+			}
+			$scope.filterCareTakers = function(){
+				$scope.filteredCareTakers = $scope.careTakers.filter(function(d){
+					return ((!$scope.careTakerZipFilter || d.ZipCode == $scope.careTakerZipFilter) 
+						&& (!$scope.needFilter || d.Description == $scope.needFilter));
+				});
+			}
 			$scope.setZip = function(zip){
-				$scope.f = zip;
+				//$scope.f = zip;
 				$scope.careTakerZipFilter = zip;
+				$scope.filterCareTakers();
 				$scope.neederZipFilter = zip;
+				$scope.filterNeeders();
 			}
 			$scope.setCareTakerZipFilter = function(zip){
 				$scope.careTakerZipFilter = zip;
 			}
 			$scope.setNeedFilter = function(need){
+				var filter;
+				var reg;
+				if(need){
+					for(var n in $scope.needs){
+						reg = new RegExp($scope.needs[n]);
+						if(n.match(reg) != null){
+							filter = $scope.needs[n];
+							break;
+						}
+					}
+					if(filter)
+						need = filter;
+				}
 				$scope.needFilter = need;
+				$scope.filterCareTakers();
+			}
+			$scope.neederOrderBy = function(orderBy){
+				$scope.neederOrderByVar = orderBy;
+			}
+			$scope.careTakerOrderBy = function(orderBy){
+				$scope.careTakerOrderByVar = orderBy;
 			}
 			$scope.setNeeder = function(obj){
 				//console.log(obj);
@@ -266,47 +332,60 @@
 				$scope.setNeedFilter(obj.d.Description);
 			}
 			$scope.fetchUserList = function(){
-				var q = '';
+				var q = '?';
 				if($scope.zip)
-					q = '?query=%7B%22ZipCode%22:%22'+$scope.zip+'%22%7D';
+					q = 'query=%7B%22ZipCode%22:%22'+$scope.zip+'%22%7D';
 				// Fetch needers
-				$http.get($scope.apiHost + $scope.neederTable + q)
-				.then(function(response) {
-					//console.log(response.data);
-					$scope.needers = response.data;
+				if($scope.useAPI){
+					$http.get($scope.apiHost + $scope.neederTable + q)
+					.then(function(response) {
+						//console.log(response.data);
+						$scope.needers = response.data;
+						$scope.afterUserListFetches();
+					}, function (response){
+						$scope.handleApiError(response);
+						$scope.afterUserListFetches();
+					});
+					// Fetch careTakers
+					$http.get($scope.apiHost + $scope.careTakerTable + q)
+					.then(function(response) {
+						$scope.careTakers = response.data;
+						$scope.afterUserListFetches();
+					}, function (response){
+						$scope.handleApiError(response);
+						$scope.afterUserListFetches();
+					});
+					// Fetch clusters
+					$http.get($scope.apiHost + $scope.matchedClustersTable + q)
+					.then(function(response) {
+						$scope.clusters = response.data;
+					}, function (response){
+						$scope.handleApiError(response);
+					});
+				}
+				else{
+					$scope.needers = $scope.defaultNeeders;
+					$scope.careTakers = $scope.defaultCareTakers;
+					$scope.clusters = $scope.defaultClusters;
 					$scope.afterUserListFetches();
-				}, function (response){
-					$scope.handleApiError(response);
 					$scope.afterUserListFetches();
-				});
-				// Fetch careTakers
-				$http.get($scope.apiHost + $scope.careTakerTable + q)
-				.then(function(response) {
-					$scope.careTakers = response.data;
-					$scope.afterUserListFetches();
-				}, function (response){
-					$scope.handleApiError(response);
-					$scope.afterUserListFetches();
-				});
-				// Fetch clusters
-				$http.get($scope.apiHost + $scope.matchedClustersTable + q)
-				.then(function(response) {
-					$scope.clusters = response.data;
-					$scope.afterUserListFetches();
-				}, function (response){
-					$scope.handleApiError(response);
-					$scope.afterUserListFetches();
-				});
-				
+				}
 			}
-			$scope.fetchUserList();
 			$scope.afterUserListFetches = function(){
 				$scope.userReturnCount++;
 				if($scope.userReturnCount == 2){
-					// Get zips & counts from needers & careTakers
-					var tmp;
-					for(var i = 0; i < $scope.needers.length; i++){
-						tmp = $scope.needers[i].ZipCode;
+					$scope.populateZipSummary();
+					$scope.userReturnCount = 0;
+					$scope.filteredNeeders = angular.copy($scope.needers);
+					$scope.filteredCareTakers = angular.copy($scope.careTakers);
+				}
+			}
+			$scope.populateZipSummary = function(){
+				// Get zips & counts from needers & careTakers
+				var tmp;
+				for(var i = 0; i < $scope.needers.length; i++){
+					tmp = $scope.needers[i].ZipCode;
+					if(tmp != undefined){
 						if(typeof $scope.zipSummary[tmp] == "undefined"){
 							$scope.zipSummary[tmp] = {needers : 1, careTakers : 0};
 						}
@@ -314,8 +393,10 @@
 							$scope.zipSummary[tmp].needers++;
 						}
 					}
-					for(var i = 0; i < $scope.careTakers.length; i++){
-						tmp = $scope.careTakers[i].ZipCode;
+				}
+				for(var i = 0; i < $scope.careTakers.length; i++){
+					tmp = $scope.careTakers[i].ZipCode;
+					if(tmp != undefined){
 						if(typeof $scope.zipSummary[tmp] == "undefined"){
 							$scope.zipSummary[tmp] = {needers : 0, careTakers : 1};
 						}
@@ -323,47 +404,46 @@
 							$scope.zipSummary[tmp].careTakers++;
 						}
 					}
-					$scope.userReturnCount = 0;
 				}
 			}
 			
-			$scope.sortNeeders = function(prop){
-				$scope.reverse = ($scope.propertyName == prop) ? !$scope.reverse : false;
-				$scope.propertyName = prop;
-			}
 			$scope.removeUser = function(user_uid, type){
 				// Call service to remove user
 				if(type == "needers"){
-					$http.delete($scope.apiHost + $scope.neederTable + '/' + user_uid)
-					.then(function(response){
-						//console.log(response);
-						// Remove user from page
-						for(var i = 0; i < $scope.needers.length; i++){
-							if($scope.needers[i]._id == user_uid){
-								$scope.needers.splice(i, 1);
-								break;
+					if($scope.useAPI){
+						$http.delete($scope.apiHost + $scope.neederTable + '/' + user_uid)
+						.then(function(response){
+							//console.log(response);
+							// Remove user from page
+							for(var i = 0; i < $scope.needers.length; i++){
+								if($scope.needers[i]._id == user_uid){
+									$scope.needers.splice(i, 1);
+									break;
+								}
 							}
-						}
-						$scope.displaySuccess('Successfully removed user');
-					}, function (response){
-						$scope.handleApiError(response);
-					});
+							$scope.displaySuccess('Successfully removed user');
+						}, function (response){
+							$scope.handleApiError(response);
+						});
+					}
 				}
 				else if(type == "careTakers"){
-					$http.delete($scope.apiHost + $scope.careTakerTable + '/' + user_uid)
-					.then(function(response){
-						//console.log(response);
-						// Remove user from page
-						for(var i = 0; i < $scope.careTakers.length; i++){
-							if($scope.careTakers[i]._id == user_uid){
-								$scope.careTakers.splice(i, 1);
-								break;
+					if($scope.useAPI){
+						$http.delete($scope.apiHost + $scope.careTakerTable + '/' + user_uid)
+						.then(function(response){
+							//console.log(response);
+							// Remove user from page
+							for(var i = 0; i < $scope.careTakers.length; i++){
+								if($scope.careTakers[i]._id == user_uid){
+									$scope.careTakers.splice(i, 1);
+									break;
+								}
 							}
-						}
-						$scope.displaySuccess('Successfully removed user');
-					}, function (response){
-						$scope.handleApiError(response);
-					});
+							$scope.displaySuccess('Successfully removed user');
+						}, function (response){
+							$scope.handleApiError(response);
+						});
+					}
 				}
 				else
 					console.log("type not found");
@@ -408,22 +488,131 @@
 				
 				//console.log(data.ExtraJSONstrings);
 				//console.log(JSON.stringify(data));
+				if($scope.useAPI){
+					$http.post($scope.apiHost + $scope.matchedClustersTable, data)
+					.then(function(){
+						// Adding back to the page
+						// TO DO: Validate the returned data
+						$scope.clusters.push(response.data);
+						//console.log("formCluster returned");
+					}, function(response){
+						$scope.handleApiError(response);
+					});
+				}
 				
-				$http.post($scope.apiHost + $scope.matchedClustersTable, data)
-				.then(function(){
-					//console.log("formCluster returned");
-				}, function(response){
-					$scope.handleApiError(response);
-				});
-				
-				// Delete the selected records
+				// TO DO: Check if users should be removed or decremented
 				$scope.removeUser(needer._id, 'needers');
 				for(var i = 0; i < selectedCareTakers.length; i++){
 					$scope.removeUser(selectedCareTakers[i]._id, 'careTakers');
 				}
 			}
+			$scope.removeCluster = function(obj){
+				
+				console.log(obj.d.ExtraJSONstrings);
+				//return;
+				
+				var clusterData = null;
+				
+				// Add needers and caretakers back to original tables through API call so they can be clustered again
+				// Also add them directly to the page
+				if(obj.d.ExtraJSONstrings){
+					clusterData = JSON.parse(obj.d.ExtraJSONstrings);
+					var found = false;
+					for(var i = 0; i < clusterData.length; i++){
+						fount = false;
+						if(i == 0){
+							// Needer
+							// Check if needer already exists, if so, update
+							for(var j = 0; j < $scope.needers.length; j++){
+								if(clusterData[i]._id == $scope.needers[j]._id){
+									found = true;
+									if($scope.needers[j].RequestedClusterSize)
+										$scope.needers[j].RequestedClusterSize += clusterData.length - 1;
+									else{
+										$scope.needers[j].RequestedClusterSize = clusterData.length - 1;
+									}
+									break;
+								}
+							}
+							
+							if(!found){
+								// Needer does not already exist, add
+								clusterData[i].RequestedClusterSize = clusterData.length - 1;
+								if($scope.useAPI){
+									$http.post($scope.apiHost + $scope.neederTable, clusterData[i])
+									.then(function(response){
+										// Adding back to the page
+										// TO DO: Validate the data
+										$scope.needers.push(response.data);
+										//console.log("formCluster returned");
+									}, function(response){
+										$scope.handleApiError(response);
+									});
+								}
+							}
+						}
+						else{
+							// Care takers
+							// Check if careTaker already exists, if so, update
+							for(var j = 0; j < $scope.careTakers.length; j++){
+								if(clusterData[i]._id == $scope.careTakers[j]._id){
+									found = true;
+									if($scope.careTakers[j].SlotCount)
+										$scope.careTakers[j].SlotCount++;
+									else{
+										$scope.careTakers[j].SlotCount = 1;
+									}
+									break;
+								}
+							}
+							
+							if(!found){
+								// Needer does not already exist, add
+								if(!clusterData[i].SlotCount)
+									clusterData[i].SlotCount = 1;
+								else
+									clusterData[i].SlotCount++;
+								if($scope.useAPI){
+									$http.post($scope.apiHost + $scope.careTakerTable, clusterData[i])
+									.then(function(response){
+										// Adding back to the page
+										// TO DO: Validate the data
+										$scope.careTakers.push(response.data);
+										//console.log("formCluster returned");
+									}, function(response){
+										$scope.handleApiError(response);
+									});
+								}
+							}
+						}
+					}
+				}
+				
+				// Delete this cluster
+				if($scope.useAPI){
+					$http.delete($scope.apiHost + $scope.matchedClustersTable + '/' + obj.d._id)
+					.then(function(response){
+						//console.log(response);
+						// Remove user from page
+						for(var i = 0; i < $scope.clusters.length; i++){
+							if($scope.clusters[i]._id == obj.d._id){
+								$scope.clusters.splice(i, 1);
+								break;
+							}
+						}
+						$scope.displaySuccess('Successfully removed cluster');
+					}, function (response){
+						$scope.handleApiError(response);
+					});
+				}
+			}
+			
 			$scope.displayFailure = function(message){
 				alert(message);
+			}
+			$scope.handleApiError = function(response){
+				//console.log(response);
+				$scope.displayFailure(response.statusText || "There was an error with your request");
 			}
 			$scope.displaySuccess = function(message){
 				$scope.successMessage = message;
@@ -431,10 +620,12 @@
 					$scope.successMessage = '';
 				}, 2000);
 			}
-			$scope.handleApiError = function(response){
-				//console.log(response);
-				$scope.displayFailure(response.statusText || "There was an error with your request");
-			}
+			
+			$scope.defaultNeeders = [{"_id":"5e7f5bf43e3bd26340c59b36","email":"additInfo@notreal.com","name":"TestUpdate","ZipCode":"94703","Description":"SLEEP","AdditioanlInfo":"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. \n Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. \n Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.","updated":"2020-03-28T14:15:16.717Z","__v":0},{"_id":"5e7f5c1068f96363885bdd47","email":"additInfo@notreal.com","name":"TestUpdate","ZipCode":"94703","Description":"SLEEP","AdditionalInfo":"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. \n Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. \n Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.","updated":"2020-03-28T14:15:44.537Z","__v":0},{"_id":"5e7f6a7e68f96363885bdd49","name":"Huh?","email":"What@huh","ZipCode":"12345","Description":"Babysitting Home Help","Hashtags":"Catholic LGBTQ ","updated":"2020-03-28T15:17:18.283Z","__v":0},{"_id":"5e7f6b4568f96363885bdd4b","name":"ghjkghjk","email":"asdf@dklnm","ZipCode":"11111","Description":"Emotional Support Remote Help","Hashtags":"","updated":"2020-03-28T15:20:37.116Z","__v":0},{"_id":"5e7f6d2c68f96363885bdd4e","name":"yuioyu","email":"uio@uio","ZipCode":"11111","Description":"General Deliveries","Hashtags":"","updated":"2020-03-28T15:28:44.226Z","__v":0},{"_id":"5e7f8b0468f96363885bdd52","name":"sdfgg","email":"dfhgdf@vbnv","ZipCode":"11111","Description":"Emotional Support Remote Help","Hashtags":"","updated":"2020-03-28T17:36:04.302Z","__v":0},{"_id":"5e7f8b2f68f96363885bdd53","name":"Albert Turing","email":"at2@vbnv","ZipCode":"11111","Description":"Emotional Support Remote Help","Hashtags":"","updated":"2020-03-28T17:36:47.960Z","__v":0},{"_id":"5e7f8b4868f96363885bdd54","name":"Albert Franklin","email":"af2@vbnv","ZipCode":"11111","Description":"Emotional Support Remote Help","Hashtags":"","updated":"2020-03-28T17:37:12.177Z","__v":0},{"_id":"5e7f8b5e68f96363885bdd55","name":"Albert Washington","email":"as2@vbnv","ZipCode":"11111","Description":"Water Deliveries","Hashtags":"","updated":"2020-03-28T17:37:34.200Z","__v":0},{"_id":"5e7f8b8c68f96363885bdd56","name":"Alan Einstein","email":"ae2@vbnv","ZipCode":"11111","Description":"Water Deliveries","Hashtags":"","updated":"2020-03-28T17:38:20.821Z","__v":0},{"_id":"5e7f9e7d77fbd465e065e7e4","name":"Sam I am","email":"sia@gmail.com","ZipCode":"11111","Description":"Water Deliveries","Hashtags":"","RequestedClusterSize":3,"updated":"2020-03-28T18:59:09.157Z","__v":0},{"_id":"645532205501181000000000","email":"email@gmail.com","name":"Rand","ZipCode":"19871","Description":"Needer","Hashtags":"BayAreaHospitalAssociation","updated":"2020-03-28T22:42:24.196Z","__v":0},{"_id":"485736874665340000000000","email":"email@yahoo.com","name":"Rand","ZipCode":"19871","Description":"Needer","Hashtags":"BayAreaHospitalAssociation","updated":"2020-03-28T22:42:24.193Z","__v":0},{"_id":"187177955514700000000000","email":"email@hotmail.com","name":"Rand","ZipCode":"19871","Description":"Needer","Hashtags":"BayAreaHospitalAssociation","updated":"2020-03-28T22:42:24.196Z","__v":0},{"_id":"483299857861642000000000","email":"email@corona.com","name":"Rand","ZipCode":"19871","Description":"Needer","Hashtags":"BayAreaHospitalAssociation","updated":"2020-03-28T22:42:24.196Z","__v":0},{"_id":"856800520507356000000000","email":"sjobs@apple.com","name":"Sjobs","ZipCode":"19871","Description":"Needer","Hashtags":"BayAreaHospitalAssociation","updated":"2020-03-28T22:42:24.197Z","__v":0},{"_id":"130074171404231000000000","email":"email@3hands.org","name":"Rand","ZipCode":"19871","Description":"Needer","Hashtags":"BayAreaHospitalAssociation","updated":"2020-03-28T22:42:24.197Z","__v":0},{"_id":"924416901250420000000000","email":"billyG@microsoft.com","name":"BigBillyG","ZipCode":"19871","Description":"Needer","Hashtags":"BayAreaHospitalAssociation","updated":"2020-03-28T22:42:24.197Z","__v":0},{"_id":"5e7fd4fd77fbd465e065e7ef","name":"Taylor Johnson","email":"TJ2@gmail.com","ZipCode":"11111","Description":"Food Deliveries","Hashtags":"","RequestedClusterSize":10,"updated":"2020-03-28T22:51:41.584Z","__v":0},{"_id":"5e7fd61177fbd465e065e7f1","name":"Jer Tay","email":"jt3@gmail.com","ZipCode":"11111","Description":"General Remote Help","Hashtags":"","RequestedClusterSize":10,"updated":"2020-03-28T22:56:17.143Z","__v":0},{"_id":"834500792974434000000000","email":"email@yahoo.com","name":"Rand","ZipCode":"19871","Description":"Needer","Hashtags":"HochosCoronaArmy","updated":"2020-03-29T00:31:39.828Z","__v":0},{"_id":"279811452249125000000000","email":"email@gmail.com","name":"Rand","ZipCode":"19871","Description":"Needer","Hashtags":"HochosCoronaArmy","updated":"2020-03-29T00:31:39.830Z","__v":0},{"_id":"314913312918742000000000","email":"email@hotmail.com","name":"Rand","ZipCode":"19871","Description":"Needer","Hashtags":"HochosCoronaArmy","updated":"2020-03-29T00:31:39.831Z","__v":0},{"_id":"390174034742152000000000","email":"email@3hands.org","name":"Rand","ZipCode":"19871","Description":"Needer","Hashtags":"HochosCoronaArmy","updated":"2020-03-29T00:31:39.831Z","__v":0},{"_id":"615994786605913000000000","email":"email@corona.com","name":"Rand","ZipCode":"19871","Description":"Needer","Hashtags":"HochosCoronaArmy","updated":"2020-03-29T00:31:39.831Z","__v":0},{"_id":"726041058139038000000000","email":"billyG@microsoft.com","name":"BigBillyG","ZipCode":"19871","Description":"Needer","Hashtags":"HochosCoronaArmy","updated":"2020-03-29T00:31:39.832Z","__v":0},{"_id":"534977939341773000000000","email":"sjobs@apple.com","name":"Sjobs","ZipCode":"19871","Description":"Needer","Hashtags":"HochosCoronaArmy","updated":"2020-03-29T00:31:39.832Z","__v":0},{"_id":"815000000000000000000000","email":"email@yahoo.com","name":"Rand","ZipCode":"19871","Description":"Needer","updated":"2020-03-29T03:27:26.222Z","__v":0},{"_id":"5e792bc46cbfc12a075f1443","email":"anelliealex@oulu.com","name":"Alex Kirk","ZipCode":"35005","Description":"Babysitting","updated":"2020-03-29T16:59:33.190Z","__v":0},{"_id":"5e792be46cbfc12a075f1452","email":"dionnemassey@medalert.com","name":"Montgomery Navarro","ZipCode":"35005","Description":"Food delivery","updated":"2020-03-29T19:48:17.080Z","__v":0},{"_id":"5e792be46cbfc12a075f144e","email":"shieldspatel@medalert.com","name":"Linda Haney","ZipCode":"35005","Description":"Medicine delivery","RequestedClusterSize":2,"updated":"2020-03-29T20:36:19.111Z","__v":0}];
+			$scope.defaultCareTakers = [{"_id":"5e779f0b6cbfc12a075f143f","email":"zoe@notreal.com","name":"Zoe Zappo","ZipCode":"94703","Description":"Offering Deliveries","__v":0},{"_id":"5e779f0b6cbfc12a075f1442","email":"xavier@notreal.com","name":"Xavier Dr.Xmen","ZipCode":"94703","Description":"Offering Deliveries","__v":0},{"_id":"5e792c006cbfc12a075f14b8","email":"altatran@medalert.com","name":"Jarvis Pena","ZipCode":"90201","Description":"Deliveries needed","__v":0},{"_id":"5e792c006cbfc12a075f14bb","email":"frostolson@medalert.com","name":"Blanca William","ZipCode":"35005","Description":"Water needed","__v":0},{"_id":"5e792c006cbfc12a075f14c3","email":"parsonsstuart@medalert.com","name":"Alma Chase","ZipCode":"1001","Description":"Medicine delivery","__v":0},{"_id":"5e792c006cbfc12a075f14bc","email":"blancawilliam@medalert.com","name":"Tricia Waters","ZipCode":"1001","Description":"Babysitting","__v":0},{"_id":"5e792c006cbfc12a075f14c8","email":"ricemacdonald@medalert.com","name":"Ann Kirby","ZipCode":"35005","Description":"Babysitting","__v":0},{"_id":"5e792c006cbfc12a075f14c0","email":"cookcraft@medalert.com","name":"Angelina Chandler","ZipCode":"1001","Description":"Water needed","__v":0},{"_id":"5e792c006cbfc12a075f14c2","email":"hildarusso@medalert.com","name":"Parsons Stuart","ZipCode":"90201","Description":"Food delivery","__v":0},{"_id":"5e792c006cbfc12a075f14a8","email":"carverlott@medalert.com","name":"Imogene Carey","ZipCode":"1001","Description":"Deliveries needed","updated":"2020-03-29T16:58:51.306Z","__v":0},{"_id":"5e792c006cbfc12a075f14a9","email":"imogenecarey@medalert.com","name":"Myrtle Moss","ZipCode":"1001","Description":"Water needed","updated":"2020-03-29T16:59:16.292Z","__v":0},{"_id":"5e792c006cbfc12a075f14c6","email":"thompsongay@medalert.com","name":"Gray Petersen","ZipCode":"1001","Description":"Deliveries needed","__v":0},{"_id":"5e792c006cbfc12a075f14ca","email":"kayesimpson@medalert.com","name":"Bell Perez","ZipCode":"90201","Description":"Medicine delivery","__v":0},{"_id":"5e792c006cbfc12a075f14cc","email":"josefinavasquez@medalert.com","name":"Erna Mcdowell","ZipCode":"1001","Description":"Deliveries needed","__v":0},{"_id":"5e792c006cbfc12a075f14d2","email":"skinnersantana@medalert.com","name":"Brenda Travis","ZipCode":"35005","Description":"Water needed","__v":0},{"_id":"5e792c006cbfc12a075f14d0","email":"judyhewitt@medalert.com","name":"Consuelo Mcmahon","ZipCode":"35005","Description":"Babysitting","__v":0},{"_id":"5e792c006cbfc12a075f14d3","email":"brendatravis@medalert.com","name":"Jacquelyn Simmons","ZipCode":"1001","Description":"Deliveries needed","__v":0},{"_id":"5e792c006cbfc12a075f14d1","email":"consuelomcmahon@medalert.com","name":"Skinner Santana","ZipCode":"90201","Description":"Deliveries needed","__v":0},{"_id":"5e792c006cbfc12a075f14d4","email":"jacquelynsimmons@medalert.com","name":"Brooke Klein","ZipCode":"1001","Description":"Medicine delivery","__v":0},{"_id":"5e792c006cbfc12a075f14d5","email":"brookeklein@medalert.com","name":"Chavez Duke","ZipCode":"1001","Description":"Babysitting","__v":0},{"_id":"5e792c006cbfc12a075f14d6","email":"chavezduke@medalert.com","name":"Dunlap Mcclain","ZipCode":"35005","Description":"Water needed","__v":0},{"_id":"5e792c006cbfc12a075f14d9","email":"whiteharding@medalert.com","name":"Rosie Fitzgerald","ZipCode":"90201","Description":"Medicine delivery","__v":0},{"_id":"5e792c006cbfc12a075f14e1","email":"shaunafrazier@medalert.com","name":"Boyd Warren","ZipCode":"1001","Description":"Water needed","__v":0},{"_id":"5e792c006cbfc12a075f14dd","email":"marvafitzpatrick@medalert.com","name":"Love Coleman","ZipCode":"90201","Description":"Babysitting","__v":0},{"_id":"5e792c006cbfc12a075f14e0","email":"guzmanpowers@medalert.com","name":"Shauna Frazier","ZipCode":"90201","Description":"Deliveries needed","__v":0},{"_id":"5e792c006cbfc12a075f14da","email":"rosiefitzgerald@medalert.com","name":"Ashlee Garrett","ZipCode":"90201","Description":"Food delivery","__v":0},{"_id":"5e792c006cbfc12a075f14de","email":"lovecoleman@medalert.com","name":"Strickland Cantu","ZipCode":"90201","Description":"Medicine delivery","__v":0},{"_id":"5e792c006cbfc12a075f14e6","email":"casehull@medalert.com","name":"Clemons Sims","ZipCode":"1001","Description":"Food delivery","__v":0},{"_id":"5e792c006cbfc12a075f14e2","email":"boydwarren@medalert.com","name":"Genevieve Lara","ZipCode":"1001","Description":"Water needed","__v":0},{"_id":"5e792c006cbfc12a075f14e5","email":"valdezmitchell@medalert.com","name":"Case Hull","ZipCode":"35005","Description":"Water needed","__v":0},{"_id":"5e792c006cbfc12a075f14df","email":"stricklandcantu@medalert.com","name":"Guzman Powers","ZipCode":"1001","Description":"Deliveries needed","__v":0},{"_id":"5e792c006cbfc12a075f14e3","email":"genevievelara@medalert.com","name":"Harriet Walker","ZipCode":"35005","Description":"Babysitting","__v":0},{"_id":"5e792c006cbfc12a075f14e7","email":"clemonssims@medalert.com","name":"Joanne Estes","ZipCode":"1001","Description":"Medicine delivery","__v":0},{"_id":"5e792c006cbfc12a075f14e4","email":"harrietwalker@medalert.com","name":"Valdez Mitchell","ZipCode":"1001","Description":"Medicine delivery","__v":0},{"_id":"5e792c006cbfc12a075f14ea","email":"craigsantos@medalert.com","name":"Gentry Dominguez","ZipCode":"35005","Description":"Water needed","__v":0},{"_id":"5e792c006cbfc12a075f14e8","email":"joanneestes@medalert.com","name":"Latisha Copeland","ZipCode":"90201","Description":"Deliveries needed","__v":0},{"_id":"5e792c006cbfc12a075f14ec","email":"dyermayo@medalert.com","name":"Hancock Graham","ZipCode":"35005","Description":"Food delivery","__v":0},{"_id":"5e792c006cbfc12a075f14ed","email":"hancockgraham@medalert.com","name":"Carter Haley","ZipCode":"90201","Description":"Medicine delivery","__v":0},{"_id":"5e792c006cbfc12a075f14ee","email":"carterhaley@medalert.com","name":"Wise Mooney","ZipCode":"35005","Description":"Babysitting","__v":0},{"_id":"5e792c006cbfc12a075f14ef","email":"wisemooney@medalert.com","name":"Inez Jefferson","ZipCode":"1001","Description":"Food delivery","__v":0},{"_id":"5e792c006cbfc12a075f14f2","email":"nguyensuarez@medalert.com","name":"Dana Wright","ZipCode":"1001","Description":"Water needed","__v":0},{"_id":"5e792c006cbfc12a075f14f5","email":"foxmcfadden@medalert.com","name":"Shannon Mclean","ZipCode":"1001","Description":"Medicine delivery","__v":0},{"_id":"5e792c006cbfc12a075f14f7","email":"averymcguire@medalert.com","name":"Maura Hudson","ZipCode":"1001","Description":"Water needed","__v":0},{"_id":"5e792c006cbfc12a075f14fa","email":"marcynash@medalert.com","name":"Enid Ingram","ZipCode":"90201","Description":"Food delivery","__v":0},{"_id":"5e792c006cbfc12a075f14f4","email":"marcellamcknight@medalert.com","name":"Fox Mcfadden","ZipCode":"35005","Description":"Deliveries needed","__v":0},{"_id":"5e792c006cbfc12a075f14fc","email":"toddhicks@medalert.com","name":"Bridges Booth","ZipCode":"1001","Description":"Medicine delivery","__v":0},{"_id":"5e792c006cbfc12a075f14f8","email":"maurahudson@medalert.com","name":"Gena Warner","ZipCode":"90201","Description":"Deliveries needed","__v":0},{"_id":"5e792c006cbfc12a075f1501","email":"annalarsen@medalert.com","name":"Christy Herrera","ZipCode":"1001","Description":"Food delivery","__v":0},{"_id":"5e792c006cbfc12a075f14fe","email":"angelitaford@medalert.com","name":"Stout Rivas","ZipCode":"35005","Description":"Water needed","__v":0},{"_id":"5e792c006cbfc12a075f1503","email":"maricelaedwards@medalert.com","name":"Clarke Ray","ZipCode":"1001","Description":"Food delivery","__v":0},{"_id":"5e792c006cbfc12a075f14ff","email":"stoutrivas@medalert.com","name":"Gladys Lopez","ZipCode":"90201","Description":"Medicine delivery","__v":0},{"_id":"5e792c006cbfc12a075f14fd","email":"bridgesbooth@medalert.com","name":"Angelita Ford","ZipCode":"35005","Description":"Food delivery","__v":0},{"_id":"5e792c006cbfc12a075f1506","email":"janariggs@medalert.com","name":"Snow Vinson","ZipCode":"90201","Description":"Deliveries needed","__v":0},{"_id":"5e792c006cbfc12a075f1508","email":"estelaortega@medalert.com","name":"Abbott House","ZipCode":"35005","Description":"Babysitting","__v":0},{"_id":"5e792c006cbfc12a075f1504","email":"clarkeray@medalert.com","name":"Larsen Navarro","ZipCode":"35005","Description":"Water needed","__v":0},{"_id":"5e792c006cbfc12a075f1502","email":"christyherrera@medalert.com","name":"Maricela Edwards","ZipCode":"90201","Description":"Medicine delivery","__v":0},{"_id":"5e792c006cbfc12a075f150b","email":"earlenestone@medalert.com","name":"Estrada Cross","ZipCode":"35005","Description":"Food delivery","__v":0},{"_id":"5e792c006cbfc12a075f1509","email":"abbotthouse@medalert.com","name":"Jillian Parrish","ZipCode":"90201","Description":"Food delivery","__v":0},{"_id":"5e792c006cbfc12a075f1507","email":"snowvinson@medalert.com","name":"Estela Ortega","ZipCode":"90201","Description":"Medicine delivery","__v":0},{"_id":"5e792c006cbfc12a075f14f1","email":"katelyndurham@medalert.com","name":"Nguyen Suarez","ZipCode":"1001","Description":"Babysitting","__v":0},{"_id":"5e792c006cbfc12a075f14f6","email":"shannonmclean@medalert.com","name":"Avery Mcguire","ZipCode":"1001","Description":"Food delivery","__v":0},{"_id":"5e792c006cbfc12a075f1500","email":"gladyslopez@medalert.com","name":"Anna Larsen","ZipCode":"35005","Description":"Water needed","__v":0},{"_id":"5e792c006cbfc12a075f150a","email":"jillianparrish@medalert.com","name":"Earlene Stone","ZipCode":"90201","Description":"Medicine delivery","__v":0},{"_id":"5e7f6c2f68f96363885bdd4c","name":"ghk","email":"ghk@oiuert","ZipCode":"11111","Description":"General Home Help","Hashtags":"","updated":"2020-03-28T15:24:31.132Z","__v":0},{"_id":"5e7f6cf768f96363885bdd4d","name":"rtyurty","email":"rtyu@yuio","ZipCode":"11111","Description":"Water Deliveries","Hashtags":"","updated":"2020-03-28T15:27:51.677Z","__v":0},{"_id":"5e7f750d68f96363885bdd4f","name":"sdfgdf","email":"dfghdfh@uio","ZipCode":"11111","Description":"Food Deliveries","Hashtags":"LGBTQ ","updated":"2020-03-28T16:02:21.114Z","__v":0},{"_id":"5e7f7eb968f96363885bdd51","name":"bnb","email":"vbnv@vbnv","ZipCode":"11111","Description":"General Deliveries","Hashtags":"","updated":"2020-03-28T16:43:37.371Z","__v":0},{"_id":"5e7f9ebb77fbd465e065e7e5","name":"Sam I am not","email":"sian@gmail.com","ZipCode":"11111","Description":"Water Deliveries","Hashtags":"","SlotCount":6,"updated":"2020-03-28T19:00:11.051Z","__v":0},{"_id":"5e7fa37977fbd465e065e7e6","name":"Benjamin Payne","email":"bp@gmail.com","ZipCode":"11111","Description":"Water Deliveries","Hashtags":"","SlotCount":6,"updated":"2020-03-28T19:20:25.682Z","__v":0},{"_id":"5e7fd50f77fbd465e065e7f0","name":"Jack Swift","email":"JS2@gmail.com","ZipCode":"11111","Description":"Food Deliveries","Hashtags":"","SlotCount":10,"updated":"2020-03-28T22:51:59.566Z","__v":0},{"_id":"845000000000000000000000","email":"email@yahoo.com","name":"Rand","ZipCode":"19871","Description":"Needer","updated":"2020-03-29T03:27:26.252Z","__v":0},{"_id":"5e792c006cbfc12a075f14ac","email":"donavalentine@medalert.com","name":"Stacie Talley","ZipCode":"1001","Description":"Food delivery","updated":"2020-03-29T16:58:51.266Z","__v":0},{"_id":"5e792c006cbfc12a075f14af","email":"foremanpadilla@medalert.com","name":"Cynthia Frank","ZipCode":"1001","Description":"Water needed","updated":"2020-03-29T16:59:16.294Z","__v":0},{"_id":"5e792c006cbfc12a075f14b3","email":"teridotson@medalert.com","name":"Lauri Mcleod","ZipCode":"35005","Description":"Food delivery","updated":"2020-03-29T16:59:33.200Z","__v":0},{"_id":"5e792c006cbfc12a075f14e9","email":"latishacopeland@medalert.com","name":"Craig Santos","ZipCode":"35005","Description":"Food delivery","updated":"2020-03-29T19:48:17.108Z","__v":0},{"_id":"5e792c006cbfc12a075f14f0","email":"inezjefferson@medalert.com","name":"Katelyn Durham","ZipCode":"35005","Description":"Food delivery","updated":"2020-03-29T19:48:17.125Z","__v":0},{"_id":"5e792c006cbfc12a075f14f3","email":"danawright@medalert.com","name":"Marcella Mcknight","ZipCode":"35005","Description":"Medicine delivery","SlotCount":1,"updated":"2020-03-29T20:36:19.189Z","__v":0},{"_id":"5e792c006cbfc12a075f14c9","email":"annkirby@medalert.com","name":"Kaye Simpson","ZipCode":"35005","Description":"Deliveries needed","SlotCount":1,"updated":"2020-03-29T20:36:19.394Z","__v":0}];
+			$scope.defaultClusters = [{"_id":"5e7c06136cbfc12a075f1514","NeederEmail":"harriscampos@medalert.com","ZipCodeCommon":"1001","Caretaker1Email":"carverlott@medalert.com","Caretaker2Email":"imogenecarey@medalert.com","Caretaker3Email":"foremanpadilla@medalert.com","ExtraJSONstrings":"[{\"_id\":\"5e792be46cbfc12a075f1444\",\"email\":\"harriscampos@medalert.com\",\"name\":\"Estella Richmond\",\"ZipCode\":\"1001\",\"Description\":\"Water needed\",\"__v\":0},{\"_id\":\"5e792c006cbfc12a075f14a8\",\"email\":\"carverlott@medalert.com\",\"name\":\"Imogene Carey\",\"ZipCode\":\"1001\",\"Description\":\"Deliveries needed\",\"__v\":0,\"selected\":true},{\"_id\":\"5e792c006cbfc12a075f14a9\",\"email\":\"imogenecarey@medalert.com\",\"name\":\"Myrtle Moss\",\"ZipCode\":\"1001\",\"Description\":\"Water needed\",\"__v\":0,\"selected\":true},{\"_id\":\"5e792c006cbfc12a075f14af\",\"email\":\"foremanpadilla@medalert.com\",\"name\":\"Cynthia Frank\",\"ZipCode\":\"1001\",\"Description\":\"Water needed\",\"__v\":0,\"selected\":true}]","__v":0},{"_id":"5e7c0d396cbfc12a075f1517","NeederEmail":"sanfordfuentes@medalert.com","ZipCodeCommon":"35005","Caretaker1Email":"claytonchang@medalert.com","Caretaker2Email":"cynthiafrank@medalert.com","Caretaker3Email":"grimesbuck@medalert.com","ExtraJSONstrings":"[{\"_id\":\"5e792be46cbfc12a075f1447\",\"email\":\"sanfordfuentes@medalert.com\",\"name\":\"Carter Banks\",\"ZipCode\":\"35005\",\"Description\":\"Babysitting\",\"__v\":0},{\"_id\":\"5e792c006cbfc12a075f14ab\",\"email\":\"claytonchang@medalert.com\",\"name\":\"Dona Valentine\",\"ZipCode\":\"35005\",\"Description\":\"Food delivery\",\"__v\":0,\"selected\":true},{\"_id\":\"5e792c006cbfc12a075f14b0\",\"email\":\"cynthiafrank@medalert.com\",\"name\":\"Hazel Meyers\",\"ZipCode\":\"35005\",\"Description\":\"Medicine delivery\",\"__v\":0,\"selected\":true},{\"_id\":\"5e792c006cbfc12a075f14b7\",\"email\":\"grimesbuck@medalert.com\",\"name\":\"Alta Tran\",\"ZipCode\":\"35005\",\"Description\":\"Medicine delivery\",\"__v\":0,\"selected\":true}]","__v":0},{"_id":"5e7c122146334e510805e495","NeederEmail":"betty@notreal.com","ZipCodeCommon":"10034","ExtraJSONstrings":"[{\"_id\":\"5e779f0b6cbfc12a075f143d\",\"email\":\"betty@notreal.com\",\"name\":\"Betty Crocker\",\"ZipCode\":\"10034\",\"Description\":\"Deliveries needed\",\"__v\":0}]","__v":0},{"_id":"5e80e613e08e5a6c057a0b26","NeederEmail":"harriscampos@medalert.com","ZipCodeCommon":"1001","ExtraJSONstrings":"[{\"_id\":\"5e792be46cbfc12a075f1444\",\"email\":\"harriscampos@medalert.com\",\"name\":\"Estella Richmond\",\"ZipCode\":\"1001\",\"Description\":\"Water needed\",\"updated\":\"2020-03-29T16:58:51.309Z\",\"__v\":0},{\"_id\":\"5e792c006cbfc12a075f14fb\",\"email\":\"enidingram@medalert.com\",\"name\":\"Todd Hicks\",\"ZipCode\":\"1001\",\"Description\":\"Water needed\",\"__v\":0,\"selected\":true}]","updated":"2020-03-29T18:16:51.658Z","__v":0},{"_id":"5e7c0f8146334e510805e494","NeederEmail":"taylorcampos@medalert.com","ZipCodeCommon":"1001","Caretaker1Email":"donavalentine@medalert.com","Caretaker2Email":"gaylelott@medalert.com","Caretaker3Email":"laurimcleod@medalert.com","Caretaker4Email":"mccartyjohns@medalert.com","ExtraJSONstrings":"[{\"_id\":\"5e792be46cbfc12a075f1446\",\"email\":\"taylorcampos@medalert.com\",\"name\":\"Sanford Fuentes\",\"ZipCode\":\"1001\",\"Description\":\"Water needed\",\"__v\":0},{\"_id\":\"5e792c006cbfc12a075f14ac\",\"email\":\"donavalentine@medalert.com\",\"name\":\"Stacie Talley\",\"ZipCode\":\"1001\",\"Description\":\"Food delivery\",\"__v\":0,\"selected\":true},{\"_id\":\"5e792c006cbfc12a075f14ae\",\"email\":\"gaylelott@medalert.com\",\"name\":\"Foreman Padilla\",\"ZipCode\":\"1001\",\"Description\":\"Water needed\",\"__v\":0,\"selected\":true},{\"_id\":\"5e792c006cbfc12a075f14b4\",\"email\":\"laurimcleod@medalert.com\",\"name\":\"Mccarty Johns\",\"ZipCode\":\"1001\",\"Description\":\"Water needed\",\"__v\":0,\"selected\":true},{\"_id\":\"5e792c006cbfc12a075f14b5\",\"email\":\"mccartyjohns@medalert.com\",\"name\":\"Solomon Brady\",\"ZipCode\":\"1001\",\"Description\":\"Deliveries needed\",\"__v\":0,\"selected\":true}]","__v":0},{"_id":"5e7c123f46334e510805e496","NeederEmail":"estellarichmond@medalert.com","ZipCodeCommon":"90201","ExtraJSONstrings":"[{\"_id\":\"5e792be46cbfc12a075f1445\",\"email\":\"estellarichmond@medalert.com\",\"name\":\"Taylor Campos\",\"ZipCode\":\"90201\",\"Description\":\"Babysitting\",\"__v\":0},{\"_id\":\"5e792c006cbfc12a075f14aa\",\"email\":\"myrtlemoss@medalert.com\",\"name\":\"Clayton Chang\",\"ZipCode\":\"90201\",\"Description\":\"Babysitting\",\"__v\":0,\"selected\":true},{\"_id\":\"5e792c006cbfc12a075f14ad\",\"email\":\"stacietalley@medalert.com\",\"name\":\"Gayle Lott\",\"ZipCode\":\"90201\",\"Description\":\"Deliveries needed\",\"__v\":0,\"selected\":true},{\"_id\":\"5e792c006cbfc12a075f14b1\",\"email\":\"hazelmeyers@medalert.com\",\"name\":\"Merrill King\",\"ZipCode\":\"90201\",\"Description\":\"Deliveries needed\",\"__v\":0,\"selected\":true},{\"_id\":\"5e792c006cbfc12a075f14b2\",\"email\":\"merrillking@medalert.com\",\"name\":\"Teri Dotson\",\"ZipCode\":\"90201\",\"Description\":\"Deliveries needed\",\"__v\":0,\"selected\":true},{\"_id\":\"5e792c006cbfc12a075f14b9\",\"email\":\"jarvispena@medalert.com\",\"name\":\"Olga Sweet\",\"ZipCode\":\"90201\",\"Description\":\"Water needed\",\"__v\":0,\"selected\":true},{\"_id\":\"5e792c006cbfc12a075f14b6\",\"email\":\"solomonbrady@medalert.com\",\"name\":\"Grimes Buck\",\"ZipCode\":\"90201\",\"Description\":\"Deliveries needed\",\"__v\":0,\"selected\":true}]","__v":0},{"_id":"5e7c130946334e510805e497","NeederEmail":"taylorcampos@medalert.com","ZipCodeCommon":"1001","Caretaker1Email":"laurimcleod@medalert.com","ExtraJSONstrings":"[{\"_id\":\"5e792be46cbfc12a075f1446\",\"email\":\"taylorcampos@medalert.com\",\"name\":\"Sanford Fuentes\",\"ZipCode\":\"1001\",\"Description\":\"Water needed\",\"__v\":0},{\"_id\":\"5e792c006cbfc12a075f14b4\",\"email\":\"laurimcleod@medalert.com\",\"name\":\"Mccarty Johns\",\"ZipCode\":\"1001\",\"Description\":\"Water needed\",\"__v\":0,\"selected\":true},\"\",\"\"]","__v":0},{"_id":"5e7c131346334e510805e498","NeederEmail":"carterbanks@medalert.com","ZipCodeCommon":"35005","Caretaker1Email":"laurimcleod@medalert.com","Caretaker2Email":"triciawaters@medalert.com","Caretaker3Email":"lindarowe@medalert.com","ExtraJSONstrings":"[{\"_id\":\"5e792be46cbfc12a075f1448\",\"email\":\"carterbanks@medalert.com\",\"name\":\"Valarie Galloway\",\"ZipCode\":\"35005\",\"Description\":\"Babysitting\",\"__v\":0},{\"_id\":\"5e792c006cbfc12a075f14b4\",\"email\":\"laurimcleod@medalert.com\",\"name\":\"Mccarty Johns\",\"ZipCode\":\"1001\",\"Description\":\"Water needed\",\"__v\":0,\"selected\":true},{\"_id\":\"5e792c006cbfc12a075f14bd\",\"email\":\"triciawaters@medalert.com\",\"name\":\"Michael Williamson\",\"ZipCode\":\"35005\",\"Description\":\"Babysitting\",\"__v\":0,\"selected\":true},{\"_id\":\"5e792c006cbfc12a075f14bf\",\"email\":\"lindarowe@medalert.com\",\"name\":\"Cook Craft\",\"ZipCode\":\"35005\",\"Description\":\"Deliveries needed\",\"__v\":0,\"selected\":true}]","__v":0},{"_id":"5e7c131c46334e510805e499","NeederEmail":"taylorcampos@medalert.com","ZipCodeCommon":"1001","Caretaker1Email":"laurimcleod@medalert.com","ExtraJSONstrings":"[{\"_id\":\"5e792be46cbfc12a075f1446\",\"email\":\"taylorcampos@medalert.com\",\"name\":\"Sanford Fuentes\",\"ZipCode\":\"1001\",\"Description\":\"Water needed\",\"__v\":0},{\"_id\":\"5e792c006cbfc12a075f14b4\",\"email\":\"laurimcleod@medalert.com\",\"name\":\"Mccarty Johns\",\"ZipCode\":\"1001\",\"Description\":\"Water needed\",\"__v\":0,\"selected\":true},\"\",\"\"]","__v":0},{"_id":"5e7c139b46334e510805e49a","NeederEmail":"lindahaney@medalert.com","ZipCodeCommon":"1001","ExtraJSONstrings":"[{\"_id\":\"5e792be46cbfc12a075f144f\",\"email\":\"lindahaney@medalert.com\",\"name\":\"Marquez Jordan\",\"ZipCode\":\"1001\",\"Description\":\"Water needed\",\"__v\":0},{\"_id\":\"5e792c006cbfc12a075f14d7\",\"email\":\"dunlapmcclain@medalert.com\",\"name\":\"Gomez Fields\",\"ZipCode\":\"1001\",\"Description\":\"Deliveries needed\",\"__v\":0,\"selected\":true}]","__v":0},{"_id":"5e7c1f9a46334e510805e49d","NeederEmail":"shieldspatel@medalert.com","ZipCodeCommon":"35005","ExtraJSONstrings":"[{\"_id\":\"5e792be46cbfc12a075f144e\",\"email\":\"shieldspatel@medalert.com\",\"name\":\"Linda Haney\",\"ZipCode\":\"35005\",\"Description\":\"Medicine delivery\",\"__v\":0},{\"_id\":\"5e792c006cbfc12a075f14c9\",\"email\":\"annkirby@medalert.com\",\"name\":\"Kaye Simpson\",\"ZipCode\":\"35005\",\"Description\":\"Deliveries needed\",\"__v\":0,\"selected\":true},{\"_id\":\"5e792c006cbfc12a075f14f3\",\"email\":\"danawright@medalert.com\",\"name\":\"Marcella Mcknight\",\"ZipCode\":\"35005\",\"Description\":\"Medicine delivery\",\"__v\":0,\"selected\":true}]","__v":0},{"_id":"5e7dc737ad0f605461db5cb7","NeederEmail":"lulaadams@medalert.com","ZipCodeCommon":"90201","ExtraJSONstrings":"[{\"_id\":\"5e792be46cbfc12a075f144b\",\"email\":\"lulaadams@medalert.com\",\"name\":\"Lillian Lucas\",\"ZipCode\":\"90201\",\"Description\":\"Water needed\",\"__v\":0},{\"_id\":\"5e792c006cbfc12a075f14ba\",\"email\":\"olgasweet@medalert.com\",\"name\":\"Frost Olson\",\"ZipCode\":\"90201\",\"Description\":\"Medicine delivery\",\"__v\":0,\"selected\":true},{\"_id\":\"5e792c006cbfc12a075f14c1\",\"email\":\"angelinachandler@medalert.com\",\"name\":\"Hilda Russo\",\"ZipCode\":\"90201\",\"Description\":\"Water needed\",\"__v\":0,\"selected\":true}]","__v":0},{"_id":"5e7dd656ad0f605461db5cb8","NeederEmail":"millicentmoreno@medalert.com","ZipCodeCommon":"1001","Caretaker1Email":"lethahendrix@medalert.com","Caretaker2Email":"bellperez@medalert.com","ExtraJSONstrings":"[{\"_id\":\"5e792be46cbfc12a075f1459\",\"email\":\"millicentmoreno@medalert.com\",\"name\":\"Logan Mason\",\"ZipCode\":\"1001\",\"Description\":\"Babysitting\",\"__v\":0},{\"_id\":\"5e792c006cbfc12a075f14ce\",\"email\":\"lethahendrix@medalert.com\",\"name\":\"Nicholson Franks\",\"ZipCode\":\"1001\",\"Description\":\"Babysitting\",\"__v\":0,\"selected\":true},{\"_id\":\"5e792c006cbfc12a075f14cb\",\"email\":\"bellperez@medalert.com\",\"name\":\"Josefina Vasquez\",\"ZipCode\":\"1001\",\"Description\":\"Babysitting\",\"__v\":0,\"selected\":true}]","__v":0}];
+			
+			$scope.fetchUserList();
 		});
 		
 		</script>
