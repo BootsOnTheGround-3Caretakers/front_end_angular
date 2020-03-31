@@ -71,6 +71,10 @@
               </nav>
           </div>
 		  <div class="container">
+			<span class="pw">
+				Password: <input type="password" ng-model="PW" />
+				<button ng-click="fetchUserList()">Set Password</button>
+			</span><br />
 			<span class="zip-buttons">
 				<strong>Zip code filters:</strong><br />
 				<button ng-repeat="(key,val) in zipSummary" ng-click="setZip(key)">{{key}} - {{val.needers}} : {{val.careTakers}}</button>
@@ -235,16 +239,18 @@
 		//import {MatSortModule} from '@angular/material/sort';
 		// Filter by zip: http://c29a9953.ngrok.io/api/v1/NeedersLookingForMatch?query=%7B%22ZipCode%22:%2294703%22%7D
 		var app = angular.module('myApp', []);
-		app.controller('myCtrl', function($scope, $filter, $http) {
+		app.controller('myCtrl', function($scope, $http) {
 			$scope.useAPI = true;
 			$scope.apiHost = 'http://c29a9953.ngrok.io/api/v1/';
 			$scope.neederTable = 'NeedersLookingForMatch';
 			$scope.careTakerTable = 'CaretakersLookingForMatch';
 			$scope.matchedClustersTable = 'MatchedClusters';
+			$scope.headerOptions = {};
 			$scope.successMessage = '';
 			$scope.userReturnCount = 0;
 			
 			//$scope.includeClustered = 1;
+			$scope.PW;
 			$scope.needs = {'Delivery': 'Deliver', 'Babysitting': 'Babysitting', 'Emotional Support': 'Emotional Support', 'Water': 'Water'};
 			$scope.needFilter;
 			$scope.selectedNeeder;
@@ -263,6 +269,14 @@
 			$scope.careTakers = [];
 			$scope.clusters = [];
 			
+			$scope.init = function(){
+				//$scope.fetchUserList();
+			}
+			
+			$scope.setPW = function(){
+				
+			}
+			
 			/*
 			// DO NOT DELETE YET
 			$scope.zipListMax = 10;
@@ -271,7 +285,7 @@
 			$scope.fetchDistinctZips = function(){
 				//http://ab86fd25.ngrok.io/api/v1/NeedersLookingForMatch?distinct=ZipCode&limit=10
 				q = '?distinct=ZipCode&limit=' + $scope.zipListMax + '&skip=' + $scope.zipListSkip;
-				$http.get($scope.apiHost + $scope.neederTable + q)
+				$http.get($scope.apiHost + $scope.neederTable + q, $scope.headerOptions)
 				.then(function(response) {
 					$scope.zipList = response.data;
 					$scope.zipListSkip += $scope.zipListMax; // Increment skip by limit
@@ -332,14 +346,20 @@
 				$scope.setNeedFilter(obj.d.Description);
 			}
 			$scope.fetchUserList = function(){
-				var q = '?';
+				var headerDict = {
+					'Authorization': $scope.PW
+				};
+				$scope.headerOptions = {headers: headerDict};
+				
+				var q = '?limit=50';
 				if($scope.zip)
-					q = 'query=%7B%22ZipCode%22:%22'+$scope.zip+'%22%7D';
+					q = '&query=%7B%22ZipCode%22:%22'+$scope.zip+'%22%7D';
 				// Fetch needers
 				if($scope.useAPI){
-					$http.get($scope.apiHost + $scope.neederTable + q)
+					$http.get($scope.apiHost + $scope.neederTable + q, $scope.headerOptions)
 					.then(function(response) {
 						//console.log(response.data);
+						//console.log('here 1');
 						$scope.needers = response.data;
 						$scope.afterUserListFetches();
 					}, function (response){
@@ -347,7 +367,7 @@
 						$scope.afterUserListFetches();
 					});
 					// Fetch careTakers
-					$http.get($scope.apiHost + $scope.careTakerTable + q)
+					$http.get($scope.apiHost + $scope.careTakerTable + q, $scope.headerOptions)
 					.then(function(response) {
 						$scope.careTakers = response.data;
 						$scope.afterUserListFetches();
@@ -356,7 +376,7 @@
 						$scope.afterUserListFetches();
 					});
 					// Fetch clusters
-					$http.get($scope.apiHost + $scope.matchedClustersTable + q)
+					$http.get($scope.apiHost + $scope.matchedClustersTable + q, $scope.headerOptions)
 					.then(function(response) {
 						$scope.clusters = response.data;
 					}, function (response){
@@ -411,7 +431,7 @@
 				// Call service to remove user
 				if(type == "needers"){
 					if($scope.useAPI){
-						$http.delete($scope.apiHost + $scope.neederTable + '/' + user_uid)
+						$http.delete($scope.apiHost + $scope.neederTable + '/' + user_uid, $scope.headerOptions)
 						.then(function(response){
 							//console.log(response);
 							// Remove user from page
@@ -429,7 +449,7 @@
 				}
 				else if(type == "careTakers"){
 					if($scope.useAPI){
-						$http.delete($scope.apiHost + $scope.careTakerTable + '/' + user_uid)
+						$http.delete($scope.apiHost + $scope.careTakerTable + '/' + user_uid, $scope.headerOptions)
 						.then(function(response){
 							//console.log(response);
 							// Remove user from page
@@ -489,7 +509,7 @@
 				//console.log(data.ExtraJSONstrings);
 				//console.log(JSON.stringify(data));
 				if($scope.useAPI){
-					$http.post($scope.apiHost + $scope.matchedClustersTable, data)
+					$http.post($scope.apiHost + $scope.matchedClustersTable, data, $scope.headerOptions)
 					.then(function(){
 						// Adding back to the page
 						// TO DO: Validate the returned data
@@ -539,7 +559,7 @@
 								// Needer does not already exist, add
 								clusterData[i].RequestedClusterSize = clusterData.length - 1;
 								if($scope.useAPI){
-									$http.post($scope.apiHost + $scope.neederTable, clusterData[i])
+									$http.post($scope.apiHost + $scope.neederTable, clusterData[i], $scope.headerOptions)
 									.then(function(response){
 										// Adding back to the page
 										// TO DO: Validate the data
@@ -573,7 +593,7 @@
 								else
 									clusterData[i].SlotCount++;
 								if($scope.useAPI){
-									$http.post($scope.apiHost + $scope.careTakerTable, clusterData[i])
+									$http.post($scope.apiHost + $scope.careTakerTable, clusterData[i], $scope.headerOptions)
 									.then(function(response){
 										// Adding back to the page
 										// TO DO: Validate the data
@@ -590,7 +610,7 @@
 				
 				// Delete this cluster
 				if($scope.useAPI){
-					$http.delete($scope.apiHost + $scope.matchedClustersTable + '/' + obj.d._id)
+					$http.delete($scope.apiHost + $scope.matchedClustersTable + '/' + obj.d._id, $scope.headerOptions)
 					.then(function(response){
 						//console.log(response);
 						// Remove user from page
@@ -625,7 +645,8 @@
 			$scope.defaultCareTakers = [{"_id":"5e779f0b6cbfc12a075f143f","email":"zoe@notreal.com","name":"Zoe Zappo","ZipCode":"94703","Description":"Offering Deliveries","__v":0},{"_id":"5e779f0b6cbfc12a075f1442","email":"xavier@notreal.com","name":"Xavier Dr.Xmen","ZipCode":"94703","Description":"Offering Deliveries","__v":0},{"_id":"5e792c006cbfc12a075f14b8","email":"altatran@medalert.com","name":"Jarvis Pena","ZipCode":"90201","Description":"Deliveries needed","__v":0},{"_id":"5e792c006cbfc12a075f14bb","email":"frostolson@medalert.com","name":"Blanca William","ZipCode":"35005","Description":"Water needed","__v":0},{"_id":"5e792c006cbfc12a075f14c3","email":"parsonsstuart@medalert.com","name":"Alma Chase","ZipCode":"1001","Description":"Medicine delivery","__v":0},{"_id":"5e792c006cbfc12a075f14bc","email":"blancawilliam@medalert.com","name":"Tricia Waters","ZipCode":"1001","Description":"Babysitting","__v":0},{"_id":"5e792c006cbfc12a075f14c8","email":"ricemacdonald@medalert.com","name":"Ann Kirby","ZipCode":"35005","Description":"Babysitting","__v":0},{"_id":"5e792c006cbfc12a075f14c0","email":"cookcraft@medalert.com","name":"Angelina Chandler","ZipCode":"1001","Description":"Water needed","__v":0},{"_id":"5e792c006cbfc12a075f14c2","email":"hildarusso@medalert.com","name":"Parsons Stuart","ZipCode":"90201","Description":"Food delivery","__v":0},{"_id":"5e792c006cbfc12a075f14a8","email":"carverlott@medalert.com","name":"Imogene Carey","ZipCode":"1001","Description":"Deliveries needed","updated":"2020-03-29T16:58:51.306Z","__v":0},{"_id":"5e792c006cbfc12a075f14a9","email":"imogenecarey@medalert.com","name":"Myrtle Moss","ZipCode":"1001","Description":"Water needed","updated":"2020-03-29T16:59:16.292Z","__v":0},{"_id":"5e792c006cbfc12a075f14c6","email":"thompsongay@medalert.com","name":"Gray Petersen","ZipCode":"1001","Description":"Deliveries needed","__v":0},{"_id":"5e792c006cbfc12a075f14ca","email":"kayesimpson@medalert.com","name":"Bell Perez","ZipCode":"90201","Description":"Medicine delivery","__v":0},{"_id":"5e792c006cbfc12a075f14cc","email":"josefinavasquez@medalert.com","name":"Erna Mcdowell","ZipCode":"1001","Description":"Deliveries needed","__v":0},{"_id":"5e792c006cbfc12a075f14d2","email":"skinnersantana@medalert.com","name":"Brenda Travis","ZipCode":"35005","Description":"Water needed","__v":0},{"_id":"5e792c006cbfc12a075f14d0","email":"judyhewitt@medalert.com","name":"Consuelo Mcmahon","ZipCode":"35005","Description":"Babysitting","__v":0},{"_id":"5e792c006cbfc12a075f14d3","email":"brendatravis@medalert.com","name":"Jacquelyn Simmons","ZipCode":"1001","Description":"Deliveries needed","__v":0},{"_id":"5e792c006cbfc12a075f14d1","email":"consuelomcmahon@medalert.com","name":"Skinner Santana","ZipCode":"90201","Description":"Deliveries needed","__v":0},{"_id":"5e792c006cbfc12a075f14d4","email":"jacquelynsimmons@medalert.com","name":"Brooke Klein","ZipCode":"1001","Description":"Medicine delivery","__v":0},{"_id":"5e792c006cbfc12a075f14d5","email":"brookeklein@medalert.com","name":"Chavez Duke","ZipCode":"1001","Description":"Babysitting","__v":0},{"_id":"5e792c006cbfc12a075f14d6","email":"chavezduke@medalert.com","name":"Dunlap Mcclain","ZipCode":"35005","Description":"Water needed","__v":0},{"_id":"5e792c006cbfc12a075f14d9","email":"whiteharding@medalert.com","name":"Rosie Fitzgerald","ZipCode":"90201","Description":"Medicine delivery","__v":0},{"_id":"5e792c006cbfc12a075f14e1","email":"shaunafrazier@medalert.com","name":"Boyd Warren","ZipCode":"1001","Description":"Water needed","__v":0},{"_id":"5e792c006cbfc12a075f14dd","email":"marvafitzpatrick@medalert.com","name":"Love Coleman","ZipCode":"90201","Description":"Babysitting","__v":0},{"_id":"5e792c006cbfc12a075f14e0","email":"guzmanpowers@medalert.com","name":"Shauna Frazier","ZipCode":"90201","Description":"Deliveries needed","__v":0},{"_id":"5e792c006cbfc12a075f14da","email":"rosiefitzgerald@medalert.com","name":"Ashlee Garrett","ZipCode":"90201","Description":"Food delivery","__v":0},{"_id":"5e792c006cbfc12a075f14de","email":"lovecoleman@medalert.com","name":"Strickland Cantu","ZipCode":"90201","Description":"Medicine delivery","__v":0},{"_id":"5e792c006cbfc12a075f14e6","email":"casehull@medalert.com","name":"Clemons Sims","ZipCode":"1001","Description":"Food delivery","__v":0},{"_id":"5e792c006cbfc12a075f14e2","email":"boydwarren@medalert.com","name":"Genevieve Lara","ZipCode":"1001","Description":"Water needed","__v":0},{"_id":"5e792c006cbfc12a075f14e5","email":"valdezmitchell@medalert.com","name":"Case Hull","ZipCode":"35005","Description":"Water needed","__v":0},{"_id":"5e792c006cbfc12a075f14df","email":"stricklandcantu@medalert.com","name":"Guzman Powers","ZipCode":"1001","Description":"Deliveries needed","__v":0},{"_id":"5e792c006cbfc12a075f14e3","email":"genevievelara@medalert.com","name":"Harriet Walker","ZipCode":"35005","Description":"Babysitting","__v":0},{"_id":"5e792c006cbfc12a075f14e7","email":"clemonssims@medalert.com","name":"Joanne Estes","ZipCode":"1001","Description":"Medicine delivery","__v":0},{"_id":"5e792c006cbfc12a075f14e4","email":"harrietwalker@medalert.com","name":"Valdez Mitchell","ZipCode":"1001","Description":"Medicine delivery","__v":0},{"_id":"5e792c006cbfc12a075f14ea","email":"craigsantos@medalert.com","name":"Gentry Dominguez","ZipCode":"35005","Description":"Water needed","__v":0},{"_id":"5e792c006cbfc12a075f14e8","email":"joanneestes@medalert.com","name":"Latisha Copeland","ZipCode":"90201","Description":"Deliveries needed","__v":0},{"_id":"5e792c006cbfc12a075f14ec","email":"dyermayo@medalert.com","name":"Hancock Graham","ZipCode":"35005","Description":"Food delivery","__v":0},{"_id":"5e792c006cbfc12a075f14ed","email":"hancockgraham@medalert.com","name":"Carter Haley","ZipCode":"90201","Description":"Medicine delivery","__v":0},{"_id":"5e792c006cbfc12a075f14ee","email":"carterhaley@medalert.com","name":"Wise Mooney","ZipCode":"35005","Description":"Babysitting","__v":0},{"_id":"5e792c006cbfc12a075f14ef","email":"wisemooney@medalert.com","name":"Inez Jefferson","ZipCode":"1001","Description":"Food delivery","__v":0},{"_id":"5e792c006cbfc12a075f14f2","email":"nguyensuarez@medalert.com","name":"Dana Wright","ZipCode":"1001","Description":"Water needed","__v":0},{"_id":"5e792c006cbfc12a075f14f5","email":"foxmcfadden@medalert.com","name":"Shannon Mclean","ZipCode":"1001","Description":"Medicine delivery","__v":0},{"_id":"5e792c006cbfc12a075f14f7","email":"averymcguire@medalert.com","name":"Maura Hudson","ZipCode":"1001","Description":"Water needed","__v":0},{"_id":"5e792c006cbfc12a075f14fa","email":"marcynash@medalert.com","name":"Enid Ingram","ZipCode":"90201","Description":"Food delivery","__v":0},{"_id":"5e792c006cbfc12a075f14f4","email":"marcellamcknight@medalert.com","name":"Fox Mcfadden","ZipCode":"35005","Description":"Deliveries needed","__v":0},{"_id":"5e792c006cbfc12a075f14fc","email":"toddhicks@medalert.com","name":"Bridges Booth","ZipCode":"1001","Description":"Medicine delivery","__v":0},{"_id":"5e792c006cbfc12a075f14f8","email":"maurahudson@medalert.com","name":"Gena Warner","ZipCode":"90201","Description":"Deliveries needed","__v":0},{"_id":"5e792c006cbfc12a075f1501","email":"annalarsen@medalert.com","name":"Christy Herrera","ZipCode":"1001","Description":"Food delivery","__v":0},{"_id":"5e792c006cbfc12a075f14fe","email":"angelitaford@medalert.com","name":"Stout Rivas","ZipCode":"35005","Description":"Water needed","__v":0},{"_id":"5e792c006cbfc12a075f1503","email":"maricelaedwards@medalert.com","name":"Clarke Ray","ZipCode":"1001","Description":"Food delivery","__v":0},{"_id":"5e792c006cbfc12a075f14ff","email":"stoutrivas@medalert.com","name":"Gladys Lopez","ZipCode":"90201","Description":"Medicine delivery","__v":0},{"_id":"5e792c006cbfc12a075f14fd","email":"bridgesbooth@medalert.com","name":"Angelita Ford","ZipCode":"35005","Description":"Food delivery","__v":0},{"_id":"5e792c006cbfc12a075f1506","email":"janariggs@medalert.com","name":"Snow Vinson","ZipCode":"90201","Description":"Deliveries needed","__v":0},{"_id":"5e792c006cbfc12a075f1508","email":"estelaortega@medalert.com","name":"Abbott House","ZipCode":"35005","Description":"Babysitting","__v":0},{"_id":"5e792c006cbfc12a075f1504","email":"clarkeray@medalert.com","name":"Larsen Navarro","ZipCode":"35005","Description":"Water needed","__v":0},{"_id":"5e792c006cbfc12a075f1502","email":"christyherrera@medalert.com","name":"Maricela Edwards","ZipCode":"90201","Description":"Medicine delivery","__v":0},{"_id":"5e792c006cbfc12a075f150b","email":"earlenestone@medalert.com","name":"Estrada Cross","ZipCode":"35005","Description":"Food delivery","__v":0},{"_id":"5e792c006cbfc12a075f1509","email":"abbotthouse@medalert.com","name":"Jillian Parrish","ZipCode":"90201","Description":"Food delivery","__v":0},{"_id":"5e792c006cbfc12a075f1507","email":"snowvinson@medalert.com","name":"Estela Ortega","ZipCode":"90201","Description":"Medicine delivery","__v":0},{"_id":"5e792c006cbfc12a075f14f1","email":"katelyndurham@medalert.com","name":"Nguyen Suarez","ZipCode":"1001","Description":"Babysitting","__v":0},{"_id":"5e792c006cbfc12a075f14f6","email":"shannonmclean@medalert.com","name":"Avery Mcguire","ZipCode":"1001","Description":"Food delivery","__v":0},{"_id":"5e792c006cbfc12a075f1500","email":"gladyslopez@medalert.com","name":"Anna Larsen","ZipCode":"35005","Description":"Water needed","__v":0},{"_id":"5e792c006cbfc12a075f150a","email":"jillianparrish@medalert.com","name":"Earlene Stone","ZipCode":"90201","Description":"Medicine delivery","__v":0},{"_id":"5e7f6c2f68f96363885bdd4c","name":"ghk","email":"ghk@oiuert","ZipCode":"11111","Description":"General Home Help","Hashtags":"","updated":"2020-03-28T15:24:31.132Z","__v":0},{"_id":"5e7f6cf768f96363885bdd4d","name":"rtyurty","email":"rtyu@yuio","ZipCode":"11111","Description":"Water Deliveries","Hashtags":"","updated":"2020-03-28T15:27:51.677Z","__v":0},{"_id":"5e7f750d68f96363885bdd4f","name":"sdfgdf","email":"dfghdfh@uio","ZipCode":"11111","Description":"Food Deliveries","Hashtags":"LGBTQ ","updated":"2020-03-28T16:02:21.114Z","__v":0},{"_id":"5e7f7eb968f96363885bdd51","name":"bnb","email":"vbnv@vbnv","ZipCode":"11111","Description":"General Deliveries","Hashtags":"","updated":"2020-03-28T16:43:37.371Z","__v":0},{"_id":"5e7f9ebb77fbd465e065e7e5","name":"Sam I am not","email":"sian@gmail.com","ZipCode":"11111","Description":"Water Deliveries","Hashtags":"","SlotCount":6,"updated":"2020-03-28T19:00:11.051Z","__v":0},{"_id":"5e7fa37977fbd465e065e7e6","name":"Benjamin Payne","email":"bp@gmail.com","ZipCode":"11111","Description":"Water Deliveries","Hashtags":"","SlotCount":6,"updated":"2020-03-28T19:20:25.682Z","__v":0},{"_id":"5e7fd50f77fbd465e065e7f0","name":"Jack Swift","email":"JS2@gmail.com","ZipCode":"11111","Description":"Food Deliveries","Hashtags":"","SlotCount":10,"updated":"2020-03-28T22:51:59.566Z","__v":0},{"_id":"845000000000000000000000","email":"email@yahoo.com","name":"Rand","ZipCode":"19871","Description":"Needer","updated":"2020-03-29T03:27:26.252Z","__v":0},{"_id":"5e792c006cbfc12a075f14ac","email":"donavalentine@medalert.com","name":"Stacie Talley","ZipCode":"1001","Description":"Food delivery","updated":"2020-03-29T16:58:51.266Z","__v":0},{"_id":"5e792c006cbfc12a075f14af","email":"foremanpadilla@medalert.com","name":"Cynthia Frank","ZipCode":"1001","Description":"Water needed","updated":"2020-03-29T16:59:16.294Z","__v":0},{"_id":"5e792c006cbfc12a075f14b3","email":"teridotson@medalert.com","name":"Lauri Mcleod","ZipCode":"35005","Description":"Food delivery","updated":"2020-03-29T16:59:33.200Z","__v":0},{"_id":"5e792c006cbfc12a075f14e9","email":"latishacopeland@medalert.com","name":"Craig Santos","ZipCode":"35005","Description":"Food delivery","updated":"2020-03-29T19:48:17.108Z","__v":0},{"_id":"5e792c006cbfc12a075f14f0","email":"inezjefferson@medalert.com","name":"Katelyn Durham","ZipCode":"35005","Description":"Food delivery","updated":"2020-03-29T19:48:17.125Z","__v":0},{"_id":"5e792c006cbfc12a075f14f3","email":"danawright@medalert.com","name":"Marcella Mcknight","ZipCode":"35005","Description":"Medicine delivery","SlotCount":1,"updated":"2020-03-29T20:36:19.189Z","__v":0},{"_id":"5e792c006cbfc12a075f14c9","email":"annkirby@medalert.com","name":"Kaye Simpson","ZipCode":"35005","Description":"Deliveries needed","SlotCount":1,"updated":"2020-03-29T20:36:19.394Z","__v":0}];
 			$scope.defaultClusters = [{"_id":"5e7c06136cbfc12a075f1514","NeederEmail":"harriscampos@medalert.com","ZipCodeCommon":"1001","Caretaker1Email":"carverlott@medalert.com","Caretaker2Email":"imogenecarey@medalert.com","Caretaker3Email":"foremanpadilla@medalert.com","ExtraJSONstrings":"[{\"_id\":\"5e792be46cbfc12a075f1444\",\"email\":\"harriscampos@medalert.com\",\"name\":\"Estella Richmond\",\"ZipCode\":\"1001\",\"Description\":\"Water needed\",\"__v\":0},{\"_id\":\"5e792c006cbfc12a075f14a8\",\"email\":\"carverlott@medalert.com\",\"name\":\"Imogene Carey\",\"ZipCode\":\"1001\",\"Description\":\"Deliveries needed\",\"__v\":0,\"selected\":true},{\"_id\":\"5e792c006cbfc12a075f14a9\",\"email\":\"imogenecarey@medalert.com\",\"name\":\"Myrtle Moss\",\"ZipCode\":\"1001\",\"Description\":\"Water needed\",\"__v\":0,\"selected\":true},{\"_id\":\"5e792c006cbfc12a075f14af\",\"email\":\"foremanpadilla@medalert.com\",\"name\":\"Cynthia Frank\",\"ZipCode\":\"1001\",\"Description\":\"Water needed\",\"__v\":0,\"selected\":true}]","__v":0},{"_id":"5e7c0d396cbfc12a075f1517","NeederEmail":"sanfordfuentes@medalert.com","ZipCodeCommon":"35005","Caretaker1Email":"claytonchang@medalert.com","Caretaker2Email":"cynthiafrank@medalert.com","Caretaker3Email":"grimesbuck@medalert.com","ExtraJSONstrings":"[{\"_id\":\"5e792be46cbfc12a075f1447\",\"email\":\"sanfordfuentes@medalert.com\",\"name\":\"Carter Banks\",\"ZipCode\":\"35005\",\"Description\":\"Babysitting\",\"__v\":0},{\"_id\":\"5e792c006cbfc12a075f14ab\",\"email\":\"claytonchang@medalert.com\",\"name\":\"Dona Valentine\",\"ZipCode\":\"35005\",\"Description\":\"Food delivery\",\"__v\":0,\"selected\":true},{\"_id\":\"5e792c006cbfc12a075f14b0\",\"email\":\"cynthiafrank@medalert.com\",\"name\":\"Hazel Meyers\",\"ZipCode\":\"35005\",\"Description\":\"Medicine delivery\",\"__v\":0,\"selected\":true},{\"_id\":\"5e792c006cbfc12a075f14b7\",\"email\":\"grimesbuck@medalert.com\",\"name\":\"Alta Tran\",\"ZipCode\":\"35005\",\"Description\":\"Medicine delivery\",\"__v\":0,\"selected\":true}]","__v":0},{"_id":"5e7c122146334e510805e495","NeederEmail":"betty@notreal.com","ZipCodeCommon":"10034","ExtraJSONstrings":"[{\"_id\":\"5e779f0b6cbfc12a075f143d\",\"email\":\"betty@notreal.com\",\"name\":\"Betty Crocker\",\"ZipCode\":\"10034\",\"Description\":\"Deliveries needed\",\"__v\":0}]","__v":0},{"_id":"5e80e613e08e5a6c057a0b26","NeederEmail":"harriscampos@medalert.com","ZipCodeCommon":"1001","ExtraJSONstrings":"[{\"_id\":\"5e792be46cbfc12a075f1444\",\"email\":\"harriscampos@medalert.com\",\"name\":\"Estella Richmond\",\"ZipCode\":\"1001\",\"Description\":\"Water needed\",\"updated\":\"2020-03-29T16:58:51.309Z\",\"__v\":0},{\"_id\":\"5e792c006cbfc12a075f14fb\",\"email\":\"enidingram@medalert.com\",\"name\":\"Todd Hicks\",\"ZipCode\":\"1001\",\"Description\":\"Water needed\",\"__v\":0,\"selected\":true}]","updated":"2020-03-29T18:16:51.658Z","__v":0},{"_id":"5e7c0f8146334e510805e494","NeederEmail":"taylorcampos@medalert.com","ZipCodeCommon":"1001","Caretaker1Email":"donavalentine@medalert.com","Caretaker2Email":"gaylelott@medalert.com","Caretaker3Email":"laurimcleod@medalert.com","Caretaker4Email":"mccartyjohns@medalert.com","ExtraJSONstrings":"[{\"_id\":\"5e792be46cbfc12a075f1446\",\"email\":\"taylorcampos@medalert.com\",\"name\":\"Sanford Fuentes\",\"ZipCode\":\"1001\",\"Description\":\"Water needed\",\"__v\":0},{\"_id\":\"5e792c006cbfc12a075f14ac\",\"email\":\"donavalentine@medalert.com\",\"name\":\"Stacie Talley\",\"ZipCode\":\"1001\",\"Description\":\"Food delivery\",\"__v\":0,\"selected\":true},{\"_id\":\"5e792c006cbfc12a075f14ae\",\"email\":\"gaylelott@medalert.com\",\"name\":\"Foreman Padilla\",\"ZipCode\":\"1001\",\"Description\":\"Water needed\",\"__v\":0,\"selected\":true},{\"_id\":\"5e792c006cbfc12a075f14b4\",\"email\":\"laurimcleod@medalert.com\",\"name\":\"Mccarty Johns\",\"ZipCode\":\"1001\",\"Description\":\"Water needed\",\"__v\":0,\"selected\":true},{\"_id\":\"5e792c006cbfc12a075f14b5\",\"email\":\"mccartyjohns@medalert.com\",\"name\":\"Solomon Brady\",\"ZipCode\":\"1001\",\"Description\":\"Deliveries needed\",\"__v\":0,\"selected\":true}]","__v":0},{"_id":"5e7c123f46334e510805e496","NeederEmail":"estellarichmond@medalert.com","ZipCodeCommon":"90201","ExtraJSONstrings":"[{\"_id\":\"5e792be46cbfc12a075f1445\",\"email\":\"estellarichmond@medalert.com\",\"name\":\"Taylor Campos\",\"ZipCode\":\"90201\",\"Description\":\"Babysitting\",\"__v\":0},{\"_id\":\"5e792c006cbfc12a075f14aa\",\"email\":\"myrtlemoss@medalert.com\",\"name\":\"Clayton Chang\",\"ZipCode\":\"90201\",\"Description\":\"Babysitting\",\"__v\":0,\"selected\":true},{\"_id\":\"5e792c006cbfc12a075f14ad\",\"email\":\"stacietalley@medalert.com\",\"name\":\"Gayle Lott\",\"ZipCode\":\"90201\",\"Description\":\"Deliveries needed\",\"__v\":0,\"selected\":true},{\"_id\":\"5e792c006cbfc12a075f14b1\",\"email\":\"hazelmeyers@medalert.com\",\"name\":\"Merrill King\",\"ZipCode\":\"90201\",\"Description\":\"Deliveries needed\",\"__v\":0,\"selected\":true},{\"_id\":\"5e792c006cbfc12a075f14b2\",\"email\":\"merrillking@medalert.com\",\"name\":\"Teri Dotson\",\"ZipCode\":\"90201\",\"Description\":\"Deliveries needed\",\"__v\":0,\"selected\":true},{\"_id\":\"5e792c006cbfc12a075f14b9\",\"email\":\"jarvispena@medalert.com\",\"name\":\"Olga Sweet\",\"ZipCode\":\"90201\",\"Description\":\"Water needed\",\"__v\":0,\"selected\":true},{\"_id\":\"5e792c006cbfc12a075f14b6\",\"email\":\"solomonbrady@medalert.com\",\"name\":\"Grimes Buck\",\"ZipCode\":\"90201\",\"Description\":\"Deliveries needed\",\"__v\":0,\"selected\":true}]","__v":0},{"_id":"5e7c130946334e510805e497","NeederEmail":"taylorcampos@medalert.com","ZipCodeCommon":"1001","Caretaker1Email":"laurimcleod@medalert.com","ExtraJSONstrings":"[{\"_id\":\"5e792be46cbfc12a075f1446\",\"email\":\"taylorcampos@medalert.com\",\"name\":\"Sanford Fuentes\",\"ZipCode\":\"1001\",\"Description\":\"Water needed\",\"__v\":0},{\"_id\":\"5e792c006cbfc12a075f14b4\",\"email\":\"laurimcleod@medalert.com\",\"name\":\"Mccarty Johns\",\"ZipCode\":\"1001\",\"Description\":\"Water needed\",\"__v\":0,\"selected\":true},\"\",\"\"]","__v":0},{"_id":"5e7c131346334e510805e498","NeederEmail":"carterbanks@medalert.com","ZipCodeCommon":"35005","Caretaker1Email":"laurimcleod@medalert.com","Caretaker2Email":"triciawaters@medalert.com","Caretaker3Email":"lindarowe@medalert.com","ExtraJSONstrings":"[{\"_id\":\"5e792be46cbfc12a075f1448\",\"email\":\"carterbanks@medalert.com\",\"name\":\"Valarie Galloway\",\"ZipCode\":\"35005\",\"Description\":\"Babysitting\",\"__v\":0},{\"_id\":\"5e792c006cbfc12a075f14b4\",\"email\":\"laurimcleod@medalert.com\",\"name\":\"Mccarty Johns\",\"ZipCode\":\"1001\",\"Description\":\"Water needed\",\"__v\":0,\"selected\":true},{\"_id\":\"5e792c006cbfc12a075f14bd\",\"email\":\"triciawaters@medalert.com\",\"name\":\"Michael Williamson\",\"ZipCode\":\"35005\",\"Description\":\"Babysitting\",\"__v\":0,\"selected\":true},{\"_id\":\"5e792c006cbfc12a075f14bf\",\"email\":\"lindarowe@medalert.com\",\"name\":\"Cook Craft\",\"ZipCode\":\"35005\",\"Description\":\"Deliveries needed\",\"__v\":0,\"selected\":true}]","__v":0},{"_id":"5e7c131c46334e510805e499","NeederEmail":"taylorcampos@medalert.com","ZipCodeCommon":"1001","Caretaker1Email":"laurimcleod@medalert.com","ExtraJSONstrings":"[{\"_id\":\"5e792be46cbfc12a075f1446\",\"email\":\"taylorcampos@medalert.com\",\"name\":\"Sanford Fuentes\",\"ZipCode\":\"1001\",\"Description\":\"Water needed\",\"__v\":0},{\"_id\":\"5e792c006cbfc12a075f14b4\",\"email\":\"laurimcleod@medalert.com\",\"name\":\"Mccarty Johns\",\"ZipCode\":\"1001\",\"Description\":\"Water needed\",\"__v\":0,\"selected\":true},\"\",\"\"]","__v":0},{"_id":"5e7c139b46334e510805e49a","NeederEmail":"lindahaney@medalert.com","ZipCodeCommon":"1001","ExtraJSONstrings":"[{\"_id\":\"5e792be46cbfc12a075f144f\",\"email\":\"lindahaney@medalert.com\",\"name\":\"Marquez Jordan\",\"ZipCode\":\"1001\",\"Description\":\"Water needed\",\"__v\":0},{\"_id\":\"5e792c006cbfc12a075f14d7\",\"email\":\"dunlapmcclain@medalert.com\",\"name\":\"Gomez Fields\",\"ZipCode\":\"1001\",\"Description\":\"Deliveries needed\",\"__v\":0,\"selected\":true}]","__v":0},{"_id":"5e7c1f9a46334e510805e49d","NeederEmail":"shieldspatel@medalert.com","ZipCodeCommon":"35005","ExtraJSONstrings":"[{\"_id\":\"5e792be46cbfc12a075f144e\",\"email\":\"shieldspatel@medalert.com\",\"name\":\"Linda Haney\",\"ZipCode\":\"35005\",\"Description\":\"Medicine delivery\",\"__v\":0},{\"_id\":\"5e792c006cbfc12a075f14c9\",\"email\":\"annkirby@medalert.com\",\"name\":\"Kaye Simpson\",\"ZipCode\":\"35005\",\"Description\":\"Deliveries needed\",\"__v\":0,\"selected\":true},{\"_id\":\"5e792c006cbfc12a075f14f3\",\"email\":\"danawright@medalert.com\",\"name\":\"Marcella Mcknight\",\"ZipCode\":\"35005\",\"Description\":\"Medicine delivery\",\"__v\":0,\"selected\":true}]","__v":0},{"_id":"5e7dc737ad0f605461db5cb7","NeederEmail":"lulaadams@medalert.com","ZipCodeCommon":"90201","ExtraJSONstrings":"[{\"_id\":\"5e792be46cbfc12a075f144b\",\"email\":\"lulaadams@medalert.com\",\"name\":\"Lillian Lucas\",\"ZipCode\":\"90201\",\"Description\":\"Water needed\",\"__v\":0},{\"_id\":\"5e792c006cbfc12a075f14ba\",\"email\":\"olgasweet@medalert.com\",\"name\":\"Frost Olson\",\"ZipCode\":\"90201\",\"Description\":\"Medicine delivery\",\"__v\":0,\"selected\":true},{\"_id\":\"5e792c006cbfc12a075f14c1\",\"email\":\"angelinachandler@medalert.com\",\"name\":\"Hilda Russo\",\"ZipCode\":\"90201\",\"Description\":\"Water needed\",\"__v\":0,\"selected\":true}]","__v":0},{"_id":"5e7dd656ad0f605461db5cb8","NeederEmail":"millicentmoreno@medalert.com","ZipCodeCommon":"1001","Caretaker1Email":"lethahendrix@medalert.com","Caretaker2Email":"bellperez@medalert.com","ExtraJSONstrings":"[{\"_id\":\"5e792be46cbfc12a075f1459\",\"email\":\"millicentmoreno@medalert.com\",\"name\":\"Logan Mason\",\"ZipCode\":\"1001\",\"Description\":\"Babysitting\",\"__v\":0},{\"_id\":\"5e792c006cbfc12a075f14ce\",\"email\":\"lethahendrix@medalert.com\",\"name\":\"Nicholson Franks\",\"ZipCode\":\"1001\",\"Description\":\"Babysitting\",\"__v\":0,\"selected\":true},{\"_id\":\"5e792c006cbfc12a075f14cb\",\"email\":\"bellperez@medalert.com\",\"name\":\"Josefina Vasquez\",\"ZipCode\":\"1001\",\"Description\":\"Babysitting\",\"__v\":0,\"selected\":true}]","__v":0}];
 			
-			$scope.fetchUserList();
+			$scope.init();
+			
 		});
 		
 		</script>
