@@ -6,34 +6,34 @@
     <!-- <link rel="stylesheet" type="text/css" href="main.css"> -->
 	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.7.9/angular.min.js"></script>
 	<style type="text/css">
-	body{background-color: #f7f7f7;}
-	body>div{background-color: #fff; padding: 15px 0 15px 0;}
-	/*.nav-wrapper{margin: 25px 0 50px 0;}*/
-	.table td, .table th{
-		padding: 0;
-	}
-	.success-message{
-		background-color: lightgreen;
-		font-weight: bold;
-	}
-	.zip-buttons>button, .need-buttons>button{
-		margin: 0 10px;
-	}
-	button.form-cluster{
-		background-color: lightgreen;
-		border: 1px solid green;
-		border-radius: 5px;
-		padding: 6px;
-		font-weight: bold;
-	}
-	div.user-list-container{
-		height: 400px;
-		overflow: auto;
-	}
-	.list-container label{
-		display: block;
-		height: 100%;
-	}
+  	body{background-color: #f7f7f7;}
+  	body>div{background-color: #fff; padding: 15px 0 15px 0;}
+  	/*.nav-wrapper{margin: 25px 0 50px 0;}*/
+  	.table td, .table th{
+  		padding: 0;
+  	}
+  	.success-message{
+  		background-color: lightgreen;
+  		font-weight: bold;
+  	}
+  	.zip-buttons>button, .need-buttons>button{
+  		margin: 0 10px;
+  	}
+  	button.form-cluster{
+  		background-color: lightgreen;
+  		border: 1px solid green;
+  		border-radius: 5px;
+  		padding: 6px;
+  		font-weight: bold;
+  	}
+  	div.user-list-container{
+  		height: 400px;
+  		overflow: auto;
+  	}
+  	.list-container label{
+  		display: block;
+  		height: 100%;
+  	}
 	</style>
 	</head>
     <body>
@@ -126,7 +126,7 @@
 		</table>
 		<button name="add" ng-click="addUser()">Create User</button>
 	  </div>
-	
+
 		<script>
 		// var data = [{"_id":"5e779f0b6cbfc12a075f143b","email":"howard@notreal.com","name":"Howard Humphries","ZipCode":"94703","Description":"Deliveries needed","__v":0},{"_id":"5e779f0b6cbfc12a075f143d","email":"betty@notreal.com","name":"Betty Crocker","ZipCode":"10034","Description":"Deliveries needed","__v":0},{"_id":"5e779f0b6cbfc12a075f143e","email":"casey@notreal.com","name":"Casey Casum","ZipCode":"94703","Description":"Babysitting","__v":0}]
 		//import {MatSortModule} from '@angular/material/sort';
@@ -138,15 +138,15 @@
 			$scope.careTakerTable = 'CaretakersLookingForMatch';
 			$scope.successMessage = '';
 			$scope.failureMessage = '';
-			
+
 			$scope.needs = {'Deliveries' : ['General Deliveries', 'Water Deliveries', 'Food Deliveries', 'Medicine Deliveries'],
 				'Home Help' : ['General Home Help', 'Babysitting Home Help', 'Fixing Home Help'],
 				'Remote Help' : ['General Remote Help', 'Emotional Support Remote Help']
 			};
 			$scope.needKey;
-			
+
 			$scope.tags = [{val : 'Catholic', selected : false}, {val : 'LGBTQ', selected : false}];
-			
+
 			$scope.name;
 			$scope.email;
 			$scope.alias;
@@ -156,7 +156,7 @@
 			$scope.needProvide;
 			$scope.Description;
 			$scope.Hashtags;
-			
+
 			$scope.changeNeed = function(key){
 				$scope.needKey = key;
 			}
@@ -166,12 +166,12 @@
 			$scope.addUser = function(){
 				var targetTable;
 				var tags = '';
-				
+
 				for(var i = 0; i < $scope.tags.length; i++){
 					if($scope.tags[i].selected)
 						tags += $scope.tags[i].val + ' ';
 				}
-				
+
 				var data = {
 					name : $scope.name,
 					email : $scope.email,
@@ -179,7 +179,7 @@
 					Description : $scope.Description,
 					Hashtags : tags
 				};
-				
+
 				if($scope.needProvide == 'need'){
 					targetTable = $scope.neederTable;
 					data.RequestedClusterSize = $scope.RequestedClusterSize;
@@ -192,9 +192,9 @@
 					console.log("Not enought data to post");
 					return;
 				}
-				
+
 				console.log(JSON.stringify(data));
-				
+
 				$http.post($scope.apiHost + targetTable, data)
 				.then(function(response){
 					$scope.displaySuccess("Successfully created user");
@@ -203,9 +203,9 @@
 				}, function(response){
 					$scope.handleApiError(response);
 				});
-				
+
 			}
-			
+
 			$scope.displayFailure = function(message){
 				alert(message);
 			}
@@ -222,6 +222,48 @@
 			}
 		});
 	  </script>
+
+    <!-- Insert these scripts at the bottom of the HTML, but before you use any Firebase services -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+    <!-- Firebase App (the core Firebase SDK) is always required and must be listed first -->
+    <script src="https://www.gstatic.com/firebasejs/7.13.1/firebase-app.js"></script>
+
+    <!-- If you enabled Analytics in your project, add the Firebase SDK for Analytics -->
+    <script src="https://www.gstatic.com/firebasejs/7.13.1/firebase-analytics.js"></script>
+
+    <!-- Add Firebase products that you want to use -->
+    <script src="https://www.gstatic.com/firebasejs/7.13.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/7.13.1/firebase-firestore.js"></script>
+
+    <script>
+      // Your web app's Firebase configuration
+      var firebaseConfig = {
+        apiKey: "AIzaSyAEt0G2RgjjMp2MO3NfSwugwkPR9CU3PuI",
+        authDomain: "caregivers-57d5f.firebaseapp.com",
+        databaseURL: "https://caregivers-57d5f.firebaseio.com",
+        projectId: "caregivers-57d5f",
+        storageBucket: "caregivers-57d5f.appspot.com",
+        messagingSenderId: "884255043543",
+        appId: "1:884255043543:web:9878fc0370fff195b8a592",
+        measurementId: "G-R75MQ7PRPV"
+      };
+      // Initialize Firebase
+      firebase.initializeApp(firebaseConfig);
+      firebase.analytics();
+    </script>
+
+    <!--Handle auth events-->
+    <script>
+      firebase.auth().onAuthStateChanged(function(firebaseuser) {
+        window.firebaseuser = firebaseuser;
+        if(firebaseuser) {
+          console.log("WE HAVE A USER")
+          console.log(firebaseuser);
+        } else {
+          console.log("not logged in, no firebase user")
+        }
+      });
+    </script>
 	</body>
 </html>
-	

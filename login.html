@@ -40,19 +40,30 @@
       </div>
       <div id="link3">
         <p>
-          Your profile and matches
+          <a href="./CreateUser.html">Your profile and matches</a>
           </p>
       </div>
       <div id="link4">
         <p>
-          <a href="./FilteredList.html> Admin Panel </a>
-          </p>
+          <a href="./FilteredList.html"> Admin Panel </a>
+        </p>
       </div>
     </div>
+    <div>
+      <h3>Axios Test </h3>
+      http://c29a9953.ngrok.io/api/v1/MatchedClusters
+
+      <button id="axios">AxiosTest</button>
+      <p id="axios-payload">
+      </p>
+    </div>
+
+
   </form>
 
   <body>
   <!-- Insert these scripts at the bottom of the HTML, but before you use any Firebase services -->
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 
   <!-- Firebase App (the core Firebase SDK) is always required and must be listed first -->
   <script src="https://www.gstatic.com/firebasejs/7.13.1/firebase-app.js"></script>
@@ -63,7 +74,6 @@
   <!-- Add Firebase products that you want to use -->
   <script src="https://www.gstatic.com/firebasejs/7.13.1/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/7.13.1/firebase-firestore.js"></script>
-</body>
 
   <script>
     // Your web app's Firebase configuration
@@ -135,6 +145,23 @@
       e.stopPropagation();
       firebase.auth().signOut();
     });
+
+    document.querySelector('#axios').addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      axios({
+        method: 'get',
+        url: 'http://c29a9953.ngrok.io/api/v1/MatchedClusters',
+        headers: {
+            'Authorization': '3CAREGIVERS',
+        },
+      })
+      .then(function (response) {
+        console.log("response");
+        document.querySelector('#axios-payload').innerText=JSON.stringify(response);
+      })
+    });
+
   </script>
 
 </body>
