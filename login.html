@@ -1,0 +1,142 @@
+<html>
+
+<head>
+  <title>Authentication Example</title>
+</head>
+
+<body>
+
+
+  <form>
+    <div>
+      <input id="email" type="text" placeholder="Email...">
+    </div>
+    <div>
+      <input id="password" type="password" placeholder="Password...">
+    </div>
+    <div>
+      <button id="sign-in">Sign In</button>
+      <button id="register">Register</button>
+      <button id="sign-out">Sign Out</button>
+    </div>
+    <hr />
+    <div id="message-box" hidden>
+      <h3>Messages</h3>
+      <p id="message">
+      </p>
+
+    </div>
+    <div id="link-box" >
+      <h3>Links</h3>
+      <div id="link1">
+        <p>
+          Get Help -- Make a NeedRequest
+          </p>
+      </div>
+      <div id="link2">
+        <p>
+          Give Help -- Make a GiveOffer
+          </p>
+      </div>
+      <div id="link3">
+        <p>
+          Your profile and matches
+          </p>
+      </div>
+      <div id="link4">
+        <p>
+          <a href="./FilteredList.html> Admin Panel </a>
+          </p>
+      </div>
+    </div>
+  </form>
+
+  <body>
+  <!-- Insert these scripts at the bottom of the HTML, but before you use any Firebase services -->
+
+  <!-- Firebase App (the core Firebase SDK) is always required and must be listed first -->
+  <script src="https://www.gstatic.com/firebasejs/7.13.1/firebase-app.js"></script>
+
+  <!-- If you enabled Analytics in your project, add the Firebase SDK for Analytics -->
+  <script src="https://www.gstatic.com/firebasejs/7.13.1/firebase-analytics.js"></script>
+
+  <!-- Add Firebase products that you want to use -->
+  <script src="https://www.gstatic.com/firebasejs/7.13.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/7.13.1/firebase-firestore.js"></script>
+</body>
+
+  <script>
+    // Your web app's Firebase configuration
+    var firebaseConfig = {
+      apiKey: "AIzaSyAEt0G2RgjjMp2MO3NfSwugwkPR9CU3PuI",
+      authDomain: "caregivers-57d5f.firebaseapp.com",
+      databaseURL: "https://caregivers-57d5f.firebaseio.com",
+      projectId: "caregivers-57d5f",
+      storageBucket: "caregivers-57d5f.appspot.com",
+      messagingSenderId: "884255043543",
+      appId: "1:884255043543:web:9878fc0370fff195b8a592",
+      measurementId: "G-R75MQ7PRPV"
+    };
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    firebase.analytics();
+  </script>
+
+  <!--Handle auth events-->
+  <script>
+    firebase.auth().onAuthStateChanged(function(firebaseuser) {
+      window.firebaseuser = firebaseuser;
+      if(firebaseuser) {
+        console.log("WE HAVE A USER")
+        console.log(firebaseuser);
+      } else {
+        console.log("not logged in, no firebase user")
+      }
+    });
+  </script>
+
+  <!--Handle page events-->
+  <script>
+    document.querySelector('#sign-in').addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      var email = document.querySelector('#email').value;
+      var password = document.querySelector('#password').value
+      const SignInPromise = firebase.auth().signInWithEmailAndPassword(email, password);
+      SignInPromise.then( () => {
+        document.querySelector('#message-box').hidden=false;
+        document.querySelector('#message').innerText=JSON.stringify(firebaseuser);
+      }
+      ).catch(e => console.log(e.message));
+      var auth = firebase.auth();
+      var currentUser = auth.currentUser;
+    });
+
+    document.querySelector('#register').addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      var email = document.querySelector('#email').value;
+      var password = document.querySelector('#password').value
+      const SignInPromise = firebase.auth().createUserWithEmailAndPassword(email, password);
+      SignInPromise.catch(e => {
+        console.log(e.message);
+        console.log(e.code);
+        if (e.code==="auth/email-already-in-use") {
+          document.querySelector('#message-box').hidden=false;
+          document.querySelector('#message').innerText="Email already registered";
+        }
+      });
+      var auth = firebase.auth();
+      var currentUser = auth.currentUser;
+    });
+
+    document.querySelector('#sign-out').addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      firebase.auth().signOut();
+    });
+  </script>
+
+</body>
+
+</html>

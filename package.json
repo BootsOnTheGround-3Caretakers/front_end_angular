@@ -1,0 +1,22 @@
+{
+  "name": "front_end_angular",
+  "version": "1.0.0",
+  "description": "3Caregivers Project, CoronavirusArmy",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BootsOnTheGround-3Caretakers/front_end_angular.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/BootsOnTheGround-3Caretakers/front_end_angular/issues"
+  },
+  "homepage": "https://github.com/BootsOnTheGround-3Caretakers/front_end_angular#readme",
+  "dependencies": {
+    "firebase": "^7.13.1"
+  }
+}
