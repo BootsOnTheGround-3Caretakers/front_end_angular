@@ -47,7 +47,7 @@
 		  </div>
 		  <div class="row">
 			<div class="container d-flex justify-content-center">
-				<h3>Boots on the Ground - 3 Caretakers</h3><br />
+				<h3>Boots on the Ground - 3 Caregivers</h3><br />
 			</div>
 		  </div>
           <div class="row">
@@ -70,11 +70,17 @@
                 </ul>
               </nav>
           </div>
-		  <div class="container">
+		  <div class="container" ng-show="showPWRow">
 			<span class="pw">
+				<h3>Not Logged In</h3>
+				Login: <a href="login.html" class="btn btn-primary">Log In</a>
 				Password: <input type="password" ng-model="PW" />
 				<button ng-click="fetchUserList()">Set Password</button>
+				- OR -
+				<button ng-click="useLocalData()">Use Local Data</button>
 			</span><br />
+		  </div>
+		  <div class="container" ng-show="!showPWRow">
 			<span class="zip-buttons">
 				<strong>Zip code filters:</strong><br />
 				<button ng-repeat="(key,val) in zipSummary" ng-click="setZip(key)">{{key}} - {{val.needers}} : {{val.careTakers}}</button>
@@ -100,7 +106,7 @@
 			</center>
 		  </div>
 		  <br />
-          <div> <!--CONTAINER DIV FOR MAIN FILTERLIST CONTENT-->
+          <div ng-show="!showPWRow"> <!--CONTAINER DIV FOR MAIN FILTERLIST CONTENT-->
             <div class="row">
 			  <div class="success-message" ng-bind="successMessage"></div>
 			</div>
@@ -139,7 +145,7 @@
 				  </div>
 			  </div>
               <div class="{{includeClustered ? 'col-md-4' : 'col-md-6'}}">
-				  <h4>Care Takers {{filteredCareTakers.length}}</h4>
+				  <h4>Care Givers {{filteredCareTakers.length}}</h4>
 				  <div class="user-list-container">
 					  <table class="table table-hover">
 						<thead>
@@ -248,6 +254,7 @@
 			$scope.headerOptions = {};
 			$scope.successMessage = '';
 			$scope.userReturnCount = 0;
+			$scope.showPWRow = true;
 
 			//$scope.includeClustered = 1;
 			$scope.PW;
@@ -272,11 +279,6 @@
 			$scope.init = function(){
 				//$scope.fetchUserList();
 			}
-
-			$scope.setPW = function(){
-
-			}
-
 			/*
 			// DO NOT DELETE YET
 			$scope.zipListMax = 10;
@@ -302,8 +304,12 @@
 			}
 			$scope.filterCareTakers = function(){
 				$scope.filteredCareTakers = $scope.careTakers.filter(function(d){
-					return ((!$scope.careTakerZipFilter || d.ZipCode == $scope.careTakerZipFilter)
-						&& (!$scope.needFilter || d.Description == $scope.needFilter));
+					var needReg = new RegExp('', 'i');
+					if($scope.needFilter)
+						needReg = new RegExp($scope.needFilter, 'i');
+					console.log($scope.needFilter);
+					return ((!$scope.careTakerZipFilter || d.ZipCode == $scope.careTakerZipFilter) 
+						&& (!$scope.needFilter || d.Description.match(needReg) != null));
 				});
 			}
 			$scope.setZip = function(zip){
@@ -345,7 +351,12 @@
 				$scope.setCareTakerZipFilter(obj.d.ZipCode);
 				$scope.setNeedFilter(obj.d.Description);
 			}
+			$scope.useLocalData = function(){
+				$scope.useAPI = false;
+				$scope.fetchUserList();
+			}
 			$scope.fetchUserList = function(){
+				$scope.showPWRow = false;
 				var headerDict = {
 					'Authorization': $scope.PW
 				};
@@ -429,6 +440,7 @@
 
 			$scope.removeUser = function(user_uid, type){
 				// Call service to remove user
+				// TO DO: Keep track of how many requests sent, then only copy filtered data once everything returns
 				if(type == "needers"){
 					if($scope.useAPI){
 						$http.delete($scope.apiHost + $scope.neederTable + '/' + user_uid, $scope.headerOptions)
@@ -441,6 +453,7 @@
 									break;
 								}
 							}
+							$scope.filteredNeeders = angular.copy($scope.needers);
 							$scope.displaySuccess('Successfully removed user');
 						}, function (response){
 							$scope.handleApiError(response);
@@ -477,7 +490,7 @@
 						selectedCareTakers.push($scope.careTakers[i]);
 					}
 				}
-
+				
 				// Validate
 				var needer = $scope.selectedNeeder;
 				if(!needer){
@@ -564,11 +577,15 @@
 										// Adding back to the page
 										// TO DO: Validate the data
 										$scope.needers.push(response.data);
+										$scope.filteredNeeders = angular.copy($scope.needers);
 										//console.log("formCluster returned");
 									}, function(response){
 										$scope.handleApiError(response);
 									});
 								}
+							}
+							else{
+								$scope.filteredNeeders = angular.copy($scope.needers);
 							}
 						}
 						else{
@@ -598,11 +615,15 @@
 										// Adding back to the page
 										// TO DO: Validate the data
 										$scope.careTakers.push(response.data);
+										$scope.filteredCareTakers = angular.copy($scope.careTakers);
 										//console.log("formCluster returned");
 									}, function(response){
 										$scope.handleApiError(response);
 									});
 								}
+							}
+							else{
+								$scope.filteredCareTakers = angular.copy($scope.careTakers);
 							}
 						}
 					}
