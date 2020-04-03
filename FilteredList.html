@@ -12,6 +12,8 @@
 	.table td, .table th{
 		padding: 0;
 	}
+	#login_wrapper>#use_api_wrapper,#login_wrapper.active>#log_in{display:none;}
+	#login_wrapper.active>#use_api_wrapper,#login_wrapper>#log_in{display:inline;}
 	.success-message{
 		background-color: lightgreen;
 		font-weight: bold;
@@ -72,12 +74,20 @@
           </div>
 		  <div class="container" ng-show="showPWRow">
 			<span class="pw">
-				<h3>Not Logged In</h3>
-				Login: <a href="login.html" class="btn btn-primary">Log In</a>
-				Password: <input type="password" ng-model="PW" />
-				<button ng-click="fetchUserList()">Set Password</button>
-				- OR -
-				<button ng-click="useLocalData()">Use Local Data</button>
+				<h3>Log In</h3>
+				<!-- Password: <input type="password" ng-model="PW" />
+				<button ng-click="fetchUserList()">Set Password</button> -->
+				<span id="login_wrapper">
+					<span id="log_in">
+						Not logged in<br />
+						Login: <a href="login.html" class="btn btn-primary">Log In Page</a>
+					</span>
+					<span id="use_api_wrapper">
+						<button ng-click="setUseAPI(true)">Use API</button>
+						- OR -
+					</span>
+				</span>
+				<button ng-click="setUseAPI(false)">Use Local Data</button>
 			</span><br />
 		  </div>
 		  <div class="container" ng-show="!showPWRow">
@@ -112,7 +122,7 @@
 			</div>
             <div class="row pl-4 pr-4">
               <div class="{{includeClustered ? 'col-md-4' : 'col-md-6'}}">
-				  <h4>Needers {{filteredNeeders.length}} </h4>
+				  <h4>Needers {{neederCount}} </h4>
 				  <div class="user-list-container list-container">
 					  <table class="table table-hover">
 						<thead>
@@ -126,7 +136,7 @@
 						  </tr>
 						</thead>
 						<tbody>
-						  <tr data-ng-repeat="d in filteredNeeders | orderBy : neederOrderByVar" data-uid="{{d._id}}">
+						  <tr data-ng-repeat="d in needers | filter:{ZipCode:neederZipFilter} | orderBy: neederOrderByVar" data-uid="{{d._id}}">
 							<td><input type="radio" name="select_needer" ng-click="setNeeder(this)" ng-value="d._id" id="{{d._id}}}" /></td>
 							<td>
 								<label for="{{d._id}}}">{{d.ZipCode}}</label>
@@ -145,7 +155,7 @@
 				  </div>
 			  </div>
               <div class="{{includeClustered ? 'col-md-4' : 'col-md-6'}}">
-				  <h4>Care Givers {{filteredCareTakers.length}}</h4>
+				  <h4>Care Givers {{careTakerCount}}</h4>
 				  <div class="user-list-container">
 					  <table class="table table-hover">
 						<thead>
@@ -158,21 +168,7 @@
 						  </tr>
 						</thead>
 						<tbody>
-						  <!-- <tr ng-repeat="d in careTakers | filter:{ZipCode:careTakerZipFilter, Description:needFilter} as filteredCareTakers" data-uid="{{d._id}}">
-							<td><input type="checkbox" name="select_care_taker" ng-model="d.selected" checklist-value="d._id" id="{{d._id}}" /></td>
-							<td>
-								<label for="{{d._id}}">{{d.ZipCode}}</label>
-							</td>
-							<td><a href="mailto:{{d.email}}">{{d.name}}</a> ({{d.SlotCount || 1}})</td>
-							<td>
-								<label for="{{d._id}}">{{d.Description}}</label>
-							</td>
-							<td>
-								<label for="{{d._id}}">{{d.Hashtags}}</label>
-							</td>
-							<td><button name="remove_user" class="btn btn-outline-danger" ng-click="removeUser(d._id, 'careTakers')">X</button></td>
-						  </tr> -->
-						  <tr ng-repeat="d in filteredCareTakers | orderBy : careTakerOrderByVar" data-uid="{{d._id}}">
+						  <tr ng-repeat="d in careTakers | filter:{ZipCode:careTakerZipFilter, Description:needFilter} | orderBy: careTakerOrderByVar" data-uid="{{d._id}}">
 							<td><input type="checkbox" name="select_care_taker" ng-model="d.selected" checklist-value="d._id" id="{{d._id}}" /></td>
 							<td>
 								<label for="{{d._id}}">{{d.ZipCode}}</label>
@@ -262,10 +258,11 @@
 			$scope.needFilter;
 			$scope.selectedNeeder;
 			$scope.neederZipFilter;
+			$scope.neederCount = 0;
 			$scope.neederOrderByVar = 'name';
 			$scope.careTakerZipFilter;
+			$scope.careTakerCount = 0;
 			$scope.careTakerOrderByVar = 'name';
-			$scope.f;
 			$scope.propertyName = 'name';
 			$scope.reverse = true;
 			$scope.zip;
@@ -297,30 +294,21 @@
 			}
 			$scope.fetchDistinctZips();
 			*/
-			$scope.filterNeeders = function(){
-				$scope.filteredNeeders = $scope.needers.filter(function(d){
-					return (!$scope.neederZipFilter || d.ZipCode == $scope.neederZipFilter);
-				});
-			}
-			$scope.filterCareTakers = function(){
-				$scope.filteredCareTakers = $scope.careTakers.filter(function(d){
-					var needReg = new RegExp('', 'i');
-					if($scope.needFilter)
-						needReg = new RegExp($scope.needFilter, 'i');
-					console.log($scope.needFilter);
-					return ((!$scope.careTakerZipFilter || d.ZipCode == $scope.careTakerZipFilter) 
-						&& (!$scope.needFilter || d.Description.match(needReg) != null));
-				});
-			}
 			$scope.setZip = function(zip){
-				//$scope.f = zip;
-				$scope.careTakerZipFilter = zip;
-				$scope.filterCareTakers();
+				$scope.setCareTakerZipFilter(zip);
 				$scope.neederZipFilter = zip;
-				$scope.filterNeeders();
+				$scope.neederCount = $scope.needers.filter((needers) => !zip || needers.ZipCode == zip).length;
 			}
 			$scope.setCareTakerZipFilter = function(zip){
 				$scope.careTakerZipFilter = zip;
+				$scope.setCareTakerCount();
+			}
+			$scope.setCareTakerCount = function(){
+				zip = $scope.careTakerZipFilter;
+				need = $scope.needFilter;
+				$scope.careTakerCount = $scope.careTakers.filter(
+					(careTakers) => (!zip || careTakers.ZipCode == zip)
+					&& (!need || careTakers.Description.match(need) != null)).length;
 			}
 			$scope.setNeedFilter = function(need){
 				var filter;
@@ -328,7 +316,7 @@
 				if(need){
 					for(var n in $scope.needs){
 						reg = new RegExp($scope.needs[n]);
-						if(n.match(reg) != null){
+						if(need.match(reg) != null){
 							filter = $scope.needs[n];
 							break;
 						}
@@ -337,7 +325,7 @@
 						need = filter;
 				}
 				$scope.needFilter = need;
-				$scope.filterCareTakers();
+				$scope.setCareTakerCount();
 			}
 			$scope.neederOrderBy = function(orderBy){
 				$scope.neederOrderByVar = orderBy;
@@ -346,21 +334,20 @@
 				$scope.careTakerOrderByVar = orderBy;
 			}
 			$scope.setNeeder = function(obj){
-				//console.log(obj);
 				$scope.selectedNeeder = obj.d;
 				$scope.setCareTakerZipFilter(obj.d.ZipCode);
 				$scope.setNeedFilter(obj.d.Description);
 			}
-			$scope.useLocalData = function(){
-				$scope.useAPI = false;
+			$scope.setUseAPI = function(val){
+				$scope.useAPI = val;
 				$scope.fetchUserList();
 			}
 			$scope.fetchUserList = function(){
 				$scope.showPWRow = false;
-				var headerDict = {
+				/*var headerDict = {
 					'Authorization': $scope.PW
 				};
-				$scope.headerOptions = {headers: headerDict};
+				$scope.headerOptions = {headers: headerDict};*/
 
 				var q = '?limit=50';
 				if($scope.zip)
@@ -370,7 +357,6 @@
 					$http.get($scope.apiHost + $scope.neederTable + q, $scope.headerOptions)
 					.then(function(response) {
 						//console.log(response.data);
-						//console.log('here 1');
 						$scope.needers = response.data;
 						$scope.afterUserListFetches();
 					}, function (response){
@@ -407,8 +393,8 @@
 				if($scope.userReturnCount == 2){
 					$scope.populateZipSummary();
 					$scope.userReturnCount = 0;
-					$scope.filteredNeeders = angular.copy($scope.needers);
-					$scope.filteredCareTakers = angular.copy($scope.careTakers);
+					$scope.neederCount = $scope.needers.length;
+					$scope.careTakerCount = $scope.careTakers.length;
 				}
 			}
 			$scope.populateZipSummary = function(){
@@ -440,7 +426,6 @@
 
 			$scope.removeUser = function(user_uid, type){
 				// Call service to remove user
-				// TO DO: Keep track of how many requests sent, then only copy filtered data once everything returns
 				if(type == "needers"){
 					if($scope.useAPI){
 						$http.delete($scope.apiHost + $scope.neederTable + '/' + user_uid, $scope.headerOptions)
@@ -453,7 +438,7 @@
 									break;
 								}
 							}
-							$scope.filteredNeeders = angular.copy($scope.needers);
+							//$scope.filteredNeeders = angular.copy($scope.needers);
 							$scope.displaySuccess('Successfully removed user');
 						}, function (response){
 							$scope.handleApiError(response);
@@ -484,7 +469,6 @@
 			$scope.formCluster = function(){
 				// Insert the user details into the matched clusters table
 				var selectedCareTakers = [];
-				// Ideally, this would iterate over filteredNeeders since it has fewer items, but I can't figure out how rn.
 				for(var i = 0; i < $scope.careTakers.length; i++){
 					if($scope.careTakers[i].selected){
 						selectedCareTakers.push($scope.careTakers[i]);
@@ -519,7 +503,6 @@
 
 				data.ExtraJSONstrings = extraJsonStr;
 
-				//console.log(data.ExtraJSONstrings);
 				//console.log(JSON.stringify(data));
 				if($scope.useAPI){
 					$http.post($scope.apiHost + $scope.matchedClustersTable, data, $scope.headerOptions)
@@ -533,10 +516,17 @@
 					});
 				}
 
-				// TO DO: Check if users should be removed or decremented
-				$scope.removeUser(needer._id, 'needers');
+				// Either remove user from source list or decrement RequestedClusterSize/SlotCount
+				if(selectedCareTakers.length >= (needer.RequestedClusterSize || 1))
+					$scope.removeUser(needer._id, 'needers');
+				else
+					needer.RequestedClusterSize -= selectedCareTakers.length;
+				
 				for(var i = 0; i < selectedCareTakers.length; i++){
-					$scope.removeUser(selectedCareTakers[i]._id, 'careTakers');
+					if(1 >= (selectedCareTakers.SlotCount || 1))
+						$scope.removeUser(selectedCareTakers[i]._id, 'careTakers');
+					else
+						selectedCareTakers.SlotCount--;
 				}
 			}
 			$scope.removeCluster = function(obj){
@@ -577,7 +567,7 @@
 										// Adding back to the page
 										// TO DO: Validate the data
 										$scope.needers.push(response.data);
-										$scope.filteredNeeders = angular.copy($scope.needers);
+										//$scope.filteredNeeders = angular.copy($scope.needers);
 										//console.log("formCluster returned");
 									}, function(response){
 										$scope.handleApiError(response);
@@ -585,7 +575,7 @@
 								}
 							}
 							else{
-								$scope.filteredNeeders = angular.copy($scope.needers);
+								//$scope.filteredNeeders = angular.copy($scope.needers);
 							}
 						}
 						else{
@@ -615,7 +605,6 @@
 										// Adding back to the page
 										// TO DO: Validate the data
 										$scope.careTakers.push(response.data);
-										$scope.filteredCareTakers = angular.copy($scope.careTakers);
 										//console.log("formCluster returned");
 									}, function(response){
 										$scope.handleApiError(response);
@@ -623,7 +612,6 @@
 								}
 							}
 							else{
-								$scope.filteredCareTakers = angular.copy($scope.careTakers);
 							}
 						}
 					}
@@ -700,17 +688,16 @@
       // Initialize Firebase
       firebase.initializeApp(firebaseConfig);
       firebase.analytics();
-    </script>
 
-    <!--Handle auth events-->
-    <script>
+      //Handle auth events
       firebase.auth().onAuthStateChanged(function(firebaseuser) {
         window.firebaseuser = firebaseuser;
         if(firebaseuser) {
-          console.log("WE HAVE A USER")
+          console.log("WE HAVE A USER");
           console.log(firebaseuser);
+		  document.getElementById('login_wrapper').className = 'active';
         } else {
-          console.log("not logged in, no firebase user")
+          console.log("not logged in, no firebase user");
         }
       });
     </script>
