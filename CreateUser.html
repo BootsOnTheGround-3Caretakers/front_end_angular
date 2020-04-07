@@ -121,6 +121,8 @@
 						<input type="checkbox" name="tag" id="hashtag-{{t.val}}" ng-model="t.selected" />
 						{{t.val}} &nbsp;
 					</label>
+					<label for="specific-need-other-str">Other:</label>
+					<input type="text" id="specific-need-other-str" ng-model="otherStr" />
 				</td>
 			</tr>
 		</table>
@@ -145,7 +147,7 @@
 			};
 			$scope.needKey;
 
-			$scope.tags = [{val : 'Catholic', selected : false}, {val : 'LGBTQ', selected : false}];
+			$scope.tags = [{val: 'Catholic', selected: false}, {val: 'LGBTQ', selected: false}, {val: 'Other', selected: false}];
 
 			$scope.name;
 			$scope.email;
@@ -153,6 +155,7 @@
 			$scope.ZipCode;
 			$scope.RequestedClusterSize = 3;
 			$scope.SlotCount = 6;
+			$scope.otherStr;
 			$scope.needProvide;
 			$scope.Description;
 			$scope.Hashtags;
@@ -169,8 +172,13 @@
 
 				for(var i = 0; i < $scope.tags.length; i++){
 					if($scope.tags[i].selected)
-						tags += $scope.tags[i].val + ' ';
+						if($scope.tags[i].val == 'Other')
+							tags += $scope.otherStr + ' ';
+						else
+							tags += $scope.tags[i].val + ' ';
 				}
+				tags = tags.replace(/ $/, '');
+				console.log(tags);
 
 				var data = {
 					name : $scope.name,
