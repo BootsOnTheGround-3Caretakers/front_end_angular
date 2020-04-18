@@ -209,7 +209,7 @@
 							<th>Zip</th>
 							<th>User</th>
 							<th>Tags</th>
-							<!-- <th>Care Takers</th> -->
+							<th>Care Takers</th>
 							<th>Delete</th>
 						  </tr>
 						</thead>
@@ -222,9 +222,9 @@
 							<td>
 								{{d.HashtagsCommon}}
 							</td>
-							<!-- <td>
-								{{d.Caretaker1Email}}
-							</td> -->
+							<td>
+								{{d.careTakerCount}}
+							</td>
 							<!-- Add Custom1 (tags) -->
 							<td><button name="remove_cluster" class="btn btn-outline-danger" ng-click="removeCluster(this)">X</button></td>
 						  </tr>
@@ -263,13 +263,13 @@
 			$scope.apiHost = 'http://c29a9953.ngrok.io/api/v1/';
 			
 			// Define class for objects that handle different tables
-			$scope.dataObject = function(table){
+			$scope.dataObject = function(table, orderBy){
 				this.table = table;
 				this.data = [];
 				this.count = 0;
 				this.selected = '';
 				this.zipFilter = '';
-				this.orderBy = 'name';
+				this.orderBy = orderBy || 'name';
 				this.isFetching = false;
 				this.setOrderBy = function(orderBy){
 					this.orderBy = orderBy;
@@ -278,16 +278,22 @@
 				
 			// Instantiate objects to handle the different tables
 			$scope.neederObj = new $scope.dataObject('NeedersLookingForMatch');
+			$scope.neederObj.setZipFilter = function(zip){
+				this.zipFilter = zip;
+				//$scope.zipApiFilter = zip;
+				//$scope.setMainFilters();
+				//this.setCount();
+			}
 			$scope.neederObj.setCount = function(){
 				this.count = this.data.filter((needers) => !this.zipFilter || needers.ZipCode == this.zipFilter).length;
 			}
 			
-			$scope.careTakerObj = new $scope.dataObject('CaretakersLookingForMatch');
+			$scope.careTakerObj = new $scope.dataObject('CaretakersLookingForMatch', 'Description');
 			$scope.careTakerObj.setZipFilter = function(zip){
 				this.zipFilter = zip;
 				$scope.zipApiFilter = zip;
 				$scope.setMainFilters();
-				this.setCount();
+				//this.setCount();
 			}
 			$scope.careTakerObj.setCount = function(){
 				var zip = this.zipFilter;
@@ -297,8 +303,8 @@
 					(careTakers) => (!zip || careTakers.ZipCode == zip)
 					&& (!need || careTakers.Description.match(need) != null)
 					&& (!tag || careTakers.Hashtags == tag)).length;
-				// If careTakerObj.count == 0, fetch caretakers & clusters for this zip and hash, but only if not already attempted to fetch
-				// TO DO: If count is 0, reduce filtering (if not specified in URL arguments)
+				// If count is 0, fetch caretakers & clusters for this zip and hash, but only if not already attempted to fetch
+				// If still 0 and already fetched, reduce filtering (if not specified in URL arguments)
 				if(this.count == 0)
 					if(zip && !$scope.zipSummary[zip].careTakersFetched){
 						$scope.fetchCareTakersClusters();
@@ -307,7 +313,7 @@
 					else if(zip && need){
 						$scope.setNeedFilter();
 					}
-					else if(zip && tag){
+					else if(zip && tag && typeof $scope.pageAttributes.urlKeyVals.h == "undefined"){
 						$scope.setTagFilter();
 					}
 			}
@@ -372,9 +378,10 @@
 			}
 			$scope.setZip = function(zip){
 				$scope.careTakerObj.setZipFilter(zip);
-				$scope.neederObj.zipFilter = zip;
+				$scope.neederObj.setZipFilter(zip);
+				$scope.careTakerObj.setCount();
 				$scope.neederObj.setCount();
-				// TO DO: If neederObj.count == 0, fetch data from all tables for this zip as long as data for this zip not already fetched
+				// TO DO: If needer count == 0, remove extra filters & fetch (as long as not already fetched for this zip and not specified as URL arguments)
 				if($scope.neederObj.count == 0){
 					$scope.setMainFilters();
 					$scope.fetchNeeders();
@@ -395,7 +402,7 @@
 						need = filter;
 				}
 				$scope.needFilter = need;
-				$scope.careTakerObj.setCount();
+				//$scope.careTakerObj.setCount();
 			}
 			$scope.setTagFilter = function(tags){
 				$scope.tagFilter = tags;
@@ -404,8 +411,10 @@
 			$scope.setNeeder = function(obj){
 				$scope.neederObj.selected = obj.d;
 				$scope.careTakerObj.setZipFilter(obj.d.ZipCode);
-				$scope.setTagFilter(obj.d.Hashtags);
+				$scope.tagFilter = obj.d.Hashtags;
 				$scope.setNeedFilter(obj.d.Description);
+				$scope.neederObj.setCount();
+				$scope.careTakerObj.setCount();
 			}
 			$scope.setUseAPI = function(){
 				// Check if "uselocaldata=1" is specified in URL
@@ -441,7 +450,7 @@
 			}
 			$scope.filtersToClusteredApiString = function(){
 				if(typeof $scope.apiFilters != "object" || Object.keys($scope.apiFilters).length < 1)
-					return '';
+					return '&query={"ClusterIsActive":{"$ne":false}}';
 				// Sample: http://c29a9953.ngrok.io/api/v1/MatchedClusters/?limit=50&query={"ZipCodeCommon":"19871","HashtagsCommon":"MyHash"}
 				var ret = '&query={';
 				for(var key in $scope.apiFilters){
@@ -451,7 +460,8 @@
 						else if(key == 'ZipCode')
 							ret += '"ZipCodeCommon":"' + $scope.apiFilters[key] + '",';
 				}
-				return ret.replace(/,$/, '') + '}';
+				ret += '"ClusterIsActive":{"$ne":false}}'
+				return ret;
 			}
 			$scope.showMainConsole = function(){
 				$scope.showMainConsoleRow = true;
@@ -460,6 +470,14 @@
 			$scope.setInitialOptions = function(){
 				$scope.showInitialSelectionRow = true;
 				$scope.fetchNeeders();
+			}
+			$scope.getCareTakerCountInCluster = function(obj){
+				var ret = 0;
+				var tmp = JSON.stringify(obj);
+				arr = tmp.match(/Caretaker\d+Email/ig);
+				if(!arr)
+					arr = [];
+				return arr.length;
 			}
 			$scope.fetchNeeders = function(){
 				$scope.showMainConsoleRow = true;
@@ -516,11 +534,8 @@
 			$scope.fetchCareTakersClusters = function(){
 				var q = '?limit=50&sort=ZipCode,Hashtags';
 				var qClustered = '?limit=50&sort=ZipCodeCommon,HashtagsCommon';
-				if(Object.keys($scope.apiFilters).length > 0){
-					q += $scope.filtersToApiString();
-					qClustered += $scope.filtersToClusteredApiString();
-					isFiltered = true;
-				}
+				q += $scope.filtersToApiString();
+				qClustered += $scope.filtersToClusteredApiString();
 				if($scope.useAPI){
 					// Fetch careTakers
 					if(!$scope.careTakerObj.isFetching){
@@ -557,15 +572,24 @@
 							$scope.clusterObj.isFetching = false;
 							console.log('cluster fetch returned');
 							// If $scope.clusterObj.data.length > 0, append data to local data ensuring it's unique
-							if($scope.clusterObj.data.length == 0)
+							if($scope.clusterObj.data.length == 0){
+								// Add caretaker count
+								for(var i = 0; i < response.data.length; i++)
+									response.data[i].careTakerCount = $scope.getCareTakerCountInCluster(response.data[i]);
+								// Populate local data object
 								$scope.clusterObj.data = response.data;
+							}
 							else{
 								var idHashTable = {};
 								for(var i = 0; i < $scope.clusterObj.data.length; i++)
 									idHashTable[$scope.clusterObj.data[i]._id] = 1;
 								for(var i = 0; i < response.data.length; i++)
-									if(!idHashTable[response.data[i]._id])
+									if(!idHashTable[response.data[i]._id]){
+										// Add caretaker count
+										response.data[i].careTakerCount = $scope.getCareTakerCountInCluster(response.data[i]);
+										// Populate local data object
 										$scope.clusterObj.data.push(response.data[i]);
+									}
 							}
 						}, function (response){
 							$scope.clusterObj.isFetching = false;
@@ -587,10 +611,12 @@
 			$scope.populateZipSummary = function(){
 				// Get zips & counts from needers & careTakers
 				var tmp;
+				// Set counts to 0
 				for(zip in $scope.zipSummary){
 					$scope.zipSummary[zip].needers = 0;
 					$scope.zipSummary[zip].careTakers = 0;
 				}
+				// Count needers in each zip
 				for(var i = 0; i < $scope.neederObj.data.length; i++){
 					tmp = $scope.neederObj.data[i].ZipCode;
 					if(tmp != undefined){
@@ -602,6 +628,7 @@
 						}
 					}
 				}
+				// Count careTakers in each zip
 				for(var i = 0; i < $scope.careTakerObj.data.length; i++){
 					tmp = $scope.careTakerObj.data[i].ZipCode;
 					if(tmp != undefined){
@@ -626,6 +653,7 @@
 							for(var i = 0; i < $scope.neederObj.data.length; i++){
 								if($scope.neederObj.data[i]._id == user_uid){
 									$scope.neederObj.data.splice(i, 1);
+									$scope.neederObj.setCount();
 									break;
 								}
 							}
@@ -645,6 +673,7 @@
 							for(var i = 0; i < $scope.careTakerObj.data.length; i++){
 								if($scope.careTakerObj.data[i]._id == user_uid){
 									$scope.careTakerObj.data.splice(i, 1);
+									$scope.careTakerObj.setCount();
 									break;
 								}
 							}
@@ -664,6 +693,7 @@
 				for(var i = 0; i < $scope.careTakerObj.data.length; i++){
 					if($scope.careTakerObj.data[i].selected){
 						selectedCareTakers.push($scope.careTakerObj.data[i]);
+						//console.log("selected caretaker: " + $scope.careTakerObj.data[i].email);
 					}
 				}
 				
@@ -681,7 +711,6 @@
 				// If needer already in cluster, add givers to existing cluster
 				var tmpJson, clusterI, clusterId;
 				for(var i = 0; i < $scope.clusterObj.data.length; i++){
-					console.log(i);
 					if($scope.clusterObj.data[i].ExraJSONstrings){
 						tmpJson = angular.toJson($scope.clusterObj.data[i].ExraJSONstrings);
 						console.log(tmpJson);
@@ -721,6 +750,7 @@
 						// Update existing cluster on page
 						for(var i = 0; i < $scope.clusterObj.data.length; i++)
 							if($scope.clusterObj.data[i]._id == clusterId){
+								response.data.careTakerCount = $scope.getCareTakerCountInCluster(response.data);
 								$scope.clusterObj.data[i] = response.data;
 								break;
 							}
@@ -742,7 +772,8 @@
 					extraJsonObj.push(needer);
 
 					for(var i = 0; i < selectedCareTakers.length; i++){
-						var propName = 'Caretaker' + i+1 + 'Email';
+						var propName = 'Caretaker' + (i+1) + 'Email';
+						//console.log(propName);
 						data[propName] = selectedCareTakers[i].email;
 						extraJsonObj.push(selectedCareTakers[i]);
 					}
@@ -757,6 +788,7 @@
 						.then(function(response){
 							// Adding back to the page
 							// TO DO: Validate the returned data
+							response.data.careTakerCount = $scope.getCareTakerCountInCluster(response.data);
 							$scope.clusterObj.data.push(response.data);
 							//console.log("formCluster returned");
 						}, function(response){
